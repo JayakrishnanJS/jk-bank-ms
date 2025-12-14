@@ -90,6 +90,22 @@ public class AccountServiceImpl implements IAccountsService {
     }
 
     /**
+     * Delete account based on mobile number.
+     *
+     * @param mobileNumber the mobile number of the customer
+     * @return true if the deletion was successful, false otherwise
+     */
+    @Override
+    public boolean deleteAccount(String mobileNumber) {
+        Customer customer = customerRepository.findByMobileNumber(mobileNumber).orElseThrow(
+                () -> new ResourceNotFoundException("Customer", "mobileNumber", mobileNumber)
+        );
+        accountsRepository.deleteByCustomerId(customer.getCustomerId()); // delete account based on foreign key customerId
+        customerRepository.deleteById(customer.getCustomerId()); // delete customer based on primary key customerId
+        return true;
+    }
+
+    /**
      * Create a new account for the given customer.
      * @param customer - the customer entity for whom the account is to be created
      * @return the newly created Accounts object
