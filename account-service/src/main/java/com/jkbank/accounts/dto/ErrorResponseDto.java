@@ -15,3 +15,4 @@ public class ErrorResponseDto {
     private String errorMessage;
     private LocalDateTime errorTime;
 }
+// validations not required since client is not sending this data to server
