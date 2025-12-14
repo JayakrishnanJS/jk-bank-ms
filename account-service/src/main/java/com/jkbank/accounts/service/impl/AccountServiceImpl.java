@@ -1,10 +1,13 @@
 package com.jkbank.accounts.service.impl;
 
 import com.jkbank.accounts.constants.AccountsConstants;
+import com.jkbank.accounts.dto.AccountsDto;
 import com.jkbank.accounts.dto.CustomerDto;
 import com.jkbank.accounts.entity.Accounts;
 import com.jkbank.accounts.entity.Customer;
 import com.jkbank.accounts.exception.CustomerAlreadyExistsException;
+import com.jkbank.accounts.exception.ResourceNotFoundException;
+import com.jkbank.accounts.mapper.AccountsMapper;
 import com.jkbank.accounts.mapper.CustomerMapper;
 import com.jkbank.accounts.repository.AccountsRepository;
 import com.jkbank.accounts.repository.CustomerRepository;
@@ -37,6 +40,25 @@ public class AccountServiceImpl implements IAccountsService {
         customer.setCreatedBy("Annonymous");
         Customer savedCustomer = customerRepository.save(customer);
         accountsRepository.save(createNewAccount(savedCustomer));
+    }
+
+    /**
+     * Fetch account details based on mobile number.
+     *
+     * @param mobileNumber the mobile number of the customer
+     * @return the customer data transfer object containing customer details
+     */
+    @Override
+    public CustomerDto fetchAccount(String mobileNumber) {
+        Customer customer = customerRepository.findByMobileNumber(mobileNumber).orElseThrow(
+                () -> new ResourceNotFoundException("Customer", "mobileNumber", mobileNumber)
+        );
+        Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId()).orElseThrow(
+                () -> new ResourceNotFoundException("Account", "customerId", customer.getCustomerId().toString())
+        );
+        CustomerDto customerDto = CustomerMapper.mapToCustomerDto(customer, new CustomerDto());
+        customerDto.setAccountsDto(AccountsMapper.mapToAccountsDto(accounts, new AccountsDto()));
+        return customerDto;
     }
 
     /**

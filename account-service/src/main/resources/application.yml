@@ -14,3 +14,6 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  jackson:
+    mapper:
+      sort-properties-alphabetically: false

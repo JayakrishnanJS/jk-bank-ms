@@ -10,4 +10,13 @@ public interface IAccountsService {
      * @param customerDto the customer data transfer object containing customer details
      */
     void createAccount(CustomerDto customerDto);
+
+
+    /**
+     * Fetch account details based on mobile number.
+     *
+     * @param mobileNumber the mobile number of the customer
+     * @return the customer data transfer object containing customer details
+     */
+    CustomerDto fetchAccount(String mobileNumber);
 }
