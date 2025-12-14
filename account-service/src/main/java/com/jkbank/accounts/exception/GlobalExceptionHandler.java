@@ -12,6 +12,17 @@ import java.time.LocalDateTime;
 @ControllerAdvice // Indicates that this class provides global exception handling
 public class GlobalExceptionHandler{
 
+    @ExceptionHandler(Exception.class) // catch and handle all generic exceptions including global runtime exceptions
+    public ResponseEntity<ErrorResponseDto> handleGlobalException(CustomerAlreadyExistsException exception, WebRequest webRequest){
+        ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                webRequest.getDescription(false),
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                exception.getMessage(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     @ExceptionHandler(CustomerAlreadyExistsException.class)
     public ResponseEntity<ErrorResponseDto> handleCustomerAlreadyExistsException(CustomerAlreadyExistsException exception, WebRequest webRequest){
         ErrorResponseDto errorResponseDto = new ErrorResponseDto(
