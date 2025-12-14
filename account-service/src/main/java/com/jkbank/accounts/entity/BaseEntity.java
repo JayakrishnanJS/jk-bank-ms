@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @MappedSuperclass
 @Getter
@@ -15,13 +15,13 @@ import java.time.LocalDate;
 public class BaseEntity {
 
     @Column(updatable = false) // createdAt should not be updated once set
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 
     @Column(updatable = false)
     private String createdBy;
 
     @Column(insertable = false) // updatedAt should not be set on insert
-    private LocalDate updatedAt;
+    private LocalDateTime updatedAt;
 
     @Column(insertable = false)
     private String updatedBy;

@@ -4,6 +4,7 @@ import com.jkbank.accounts.constants.AccountsConstants;
 import com.jkbank.accounts.dto.CustomerDto;
 import com.jkbank.accounts.entity.Accounts;
 import com.jkbank.accounts.entity.Customer;
+import com.jkbank.accounts.exception.CustomerAlreadyExistsException;
 import com.jkbank.accounts.mapper.CustomerMapper;
 import com.jkbank.accounts.repository.AccountsRepository;
 import com.jkbank.accounts.repository.CustomerRepository;
@@ -11,6 +12,8 @@ import com.jkbank.accounts.service.IAccountsService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -21,12 +24,17 @@ public class AccountServiceImpl implements IAccountsService {
     private CustomerRepository customerRepository;
     /**
      * Create a new account for the given customer.
-     *
      * @param customerDto - the customer data transfer object containing customer details
      */
     @Override
     public void createAccount(CustomerDto customerDto) {
         Customer customer = CustomerMapper.mapToCustomer(customerDto, new Customer());
+        Optional<Customer> optionalCustomer = customerRepository.findByMobileNumber(customerDto.getMobileNumber());
+        if(optionalCustomer.isPresent()) {
+            throw new CustomerAlreadyExistsException("Customer already exists with given mobile number: " + customerDto.getMobileNumber());
+        }
+        customer.setCreatedAt(LocalDateTime.now());
+        customer.setCreatedBy("Annonymous");
         Customer savedCustomer = customerRepository.save(customer);
         accountsRepository.save(createNewAccount(savedCustomer));
     }
@@ -43,6 +51,10 @@ public class AccountServiceImpl implements IAccountsService {
         newAccount.setAccountNumber(randomAccNumber);
         newAccount.setAccountType(AccountsConstants.SAVINGS);
         newAccount.setBranchAddress(AccountsConstants.ADDRESS);
+        newAccount.setCreatedAt(LocalDateTime.now());
+        newAccount.setCreatedBy("Annonymous");
         return newAccount;
     }
+
+
 }
