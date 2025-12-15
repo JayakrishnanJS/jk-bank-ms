@@ -36,9 +36,20 @@ public class AccountsController {
             summary = "Create Account REST API",
             description = "Create account for a customer in JK Bank"
     )
-    @ApiResponse(
-            responseCode = "201",
-            description = "HTTP Status 201 CREATED"
+    @ApiResponses(
+            {
+                    @ApiResponse(
+                            responseCode = "201",
+                            description = "HTTP Status 201 CREATED"
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "HTTP Status INTERNAL SERVER ERROR",
+                            content = @Content(
+                                    schema = @Schema(implementation = ErrorResponseDto.class)
+                            )
+                    )
+            }
     )
     @PostMapping("/create")
     public ResponseEntity<ResponseDto> createAccount(@Valid @RequestBody CustomerDto customerDto) {
@@ -52,9 +63,20 @@ public class AccountsController {
             summary = "Fetch Account REST API",
             description = "Fetch account details for a customer in JK Bank based on mobile number"
     )
-    @ApiResponse(
-            responseCode = "200",
-            description = "HTTP Status OK"
+    @ApiResponses(
+            {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "HTTP Status OK"
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "HTTP Status INTERNAL SERVER ERROR",
+                            content = @Content(
+                                    schema = @Schema(implementation = ErrorResponseDto.class)
+                            )
+                    )
+            }
     )
     @GetMapping("/fetch")
     public ResponseEntity<CustomerDto> fetchAccountDetails(@RequestParam
@@ -77,6 +99,10 @@ public class AccountsController {
                 description = "HTTP Status OK"
                 ),
                 @ApiResponse(
+                responseCode = "417",
+                description = "Expectation Failed"
+                ),
+                @ApiResponse(
                 responseCode = "500",
                 description = "HTTP Status INTERNAL SERVER ERROR",
                 content = @Content(
@@ -94,8 +120,8 @@ public class AccountsController {
                     .body(new ResponseDto((AccountsConstants.STATUS_200), AccountsConstants.MESSAGE_200));
         } else {
             return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseDto((AccountsConstants.STATUS_500), AccountsConstants.MESSAGE_500));
+                    .status(HttpStatus.EXPECTATION_FAILED)
+                    .body(new ResponseDto((AccountsConstants.STATUS_417), AccountsConstants.MESSAGE_417_UPDATE));
         }
     }
 
@@ -108,6 +134,10 @@ public class AccountsController {
                     @ApiResponse(
                             responseCode = "200",
                             description = "HTTP Status OK"
+                    ),
+                    @ApiResponse(
+                            responseCode = "417",
+                            description = "Expectation Failed"
                     ),
                     @ApiResponse(
                             responseCode = "500",
@@ -129,8 +159,8 @@ public class AccountsController {
                     .body(new ResponseDto((AccountsConstants.STATUS_200), AccountsConstants.MESSAGE_200));
         } else {
             return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseDto((AccountsConstants.STATUS_500), AccountsConstants.MESSAGE_500));
+                    .status(HttpStatus.EXPECTATION_FAILED)
+                    .body(new ResponseDto((AccountsConstants.STATUS_417), AccountsConstants.MESSAGE_417_DELETE));
         }
     }
 }
