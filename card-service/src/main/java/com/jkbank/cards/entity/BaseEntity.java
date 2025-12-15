@@ -1,6 +1,7 @@
 package com.jkbank.cards.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,5 +33,5 @@ public class BaseEntity {
 
     @LastModifiedBy
     @Column(insertable = false)
-    private LocalDateTime updatedBy;
+    private String updatedBy;
 }
