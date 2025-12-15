@@ -22,4 +22,11 @@ public interface ICardsService {
      * @return true if the update was successful, false otherwise
      */
     boolean updateCard(CardsDto cardsDto);
+
+    /**
+     * Delete card based on mobile number.
+     * @param mobileNumber the mobile number of the customer
+     * @return true if the deletion was successful, false otherwise
+     */
+    boolean deleteCard(String mobileNumber);
 }
