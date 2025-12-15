@@ -2,9 +2,12 @@ package com.jkbank.accounts.controller;
 
 import com.jkbank.accounts.constants.AccountsConstants;
 import com.jkbank.accounts.dto.CustomerDto;
+import com.jkbank.accounts.dto.ErrorResponseDto;
 import com.jkbank.accounts.dto.ResponseDto;
 import com.jkbank.accounts.service.IAccountsService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -75,7 +78,10 @@ public class AccountsController {
                 ),
                 @ApiResponse(
                 responseCode = "500",
-                description = "HTTP Status INTERNAL SERVER ERROR"
+                description = "HTTP Status INTERNAL SERVER ERROR",
+                content = @Content(
+                        schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
                 )
             }
     )
@@ -105,7 +111,10 @@ public class AccountsController {
                     ),
                     @ApiResponse(
                             responseCode = "500",
-                            description = "HTTP Status INTERNAL SERVER ERROR"
+                            description = "HTTP Status INTERNAL SERVER ERROR",
+                            content = @Content(
+                                    schema = @Schema(implementation = ErrorResponseDto.class)
+                            )
                     )
             }
     )
