@@ -3,7 +3,7 @@ package com.jkbank.cards.service.impl;
 import com.jkbank.cards.constants.CardsConstants;
 import com.jkbank.cards.dto.CardsDto;
 import com.jkbank.cards.entity.Cards;
-import com.jkbank.cards.exception.CardAlreadyExistException;
+import com.jkbank.cards.exception.CardAlreadyExistsException;
 import com.jkbank.cards.exception.ResourceNotFoundException;
 import com.jkbank.cards.mapper.CardsMapper;
 import com.jkbank.cards.repository.CardsRepository;
@@ -28,7 +28,7 @@ public class CardsServiceImpl implements ICardsService {
     public void createCard(String mobileNumber) {
         Optional<Cards> optionalCards = cardsRepository.findByMobileNumber(mobileNumber);
         if (optionalCards.isPresent()) {
-            throw new CardAlreadyExistException("Card already exists for mobile number: " + mobileNumber);
+            throw new CardAlreadyExistsException("Card already exists for mobile number: " + mobileNumber);
         }
         cardsRepository.save(createNewCard(mobileNumber));
     }
