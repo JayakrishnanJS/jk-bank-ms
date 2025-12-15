@@ -15,4 +15,11 @@ public interface ICardsService {
      * @return the card data transfer object containing card details
      */
     CardsDto fetchCard(String mobileNumber);
+
+    /**
+     * Update card details for the given card.
+     * @param cardsDto the card data transfer object containing updated card details
+     * @return true if the update was successful, false otherwise
+     */
+    boolean updateCard(CardsDto cardsDto);
 }

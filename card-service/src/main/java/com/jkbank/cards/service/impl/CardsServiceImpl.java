@@ -47,6 +47,22 @@ public class CardsServiceImpl implements ICardsService {
         return CardsMapper.mapToCardsDto(cards, new CardsDto());
     }
 
+    /**
+     * Update card details for the given card.
+     *
+     * @param cardsDto the card data transfer object containing updated card details
+     * @return true if the update was successful, false otherwise
+     */
+    @Override
+    public boolean updateCard(CardsDto cardsDto) {
+        Cards cards = cardsRepository.findByCardNumber(cardsDto.getCardNumber()).orElseThrow(
+                () -> new ResourceNotFoundException("Card", "cardNumber", cardsDto.getCardNumber())
+        );
+        Cards updatedCards = CardsMapper.mapToCards(cardsDto, cards);
+        cardsRepository.save(updatedCards);
+        return true;
+    }
+
     private Cards createNewCard(String mobileNumber) {
         Cards newCard = new Cards();
         long randomCardNumber = 100000000000L + new Random().nextInt(900000000);
