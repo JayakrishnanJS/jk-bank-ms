@@ -34,7 +34,7 @@ public class CustomerDto {
             description = "Mobile number of the customer",
             example = "9999999999"
     )
-    @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits") // Validation annotation to ensure the mobile number is exactly 10 digits
+    @Pattern(regexp = "(^[0-9]{10})", message = "Mobile number must be 10 digits") // Validation annotation to ensure the mobile number is exactly 10 digits
     private String mobileNumber;
 
     @Schema(

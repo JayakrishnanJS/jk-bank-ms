@@ -16,7 +16,7 @@ public class AccountsDto {
             description = "Account number of the customer",
             example = "1234567890"
     )
-    @Pattern(regexp = "(^$|[0-9]{10})", message = "Account number must be 10 digits") // Validation annotation to ensure the account number is exactly 10 digits)
+    @Pattern(regexp = "(^[0-9]{10})", message = "Account number must be 10 digits") // Validation annotation to ensure the account number is exactly 10 digits)
     private Long accountNumber;
 
     @Schema(
