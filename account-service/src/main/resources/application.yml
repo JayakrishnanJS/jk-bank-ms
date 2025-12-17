@@ -17,12 +17,19 @@ spring:
   jackson:
     mapper:
       sort-properties-alphabetically: false
+  config:
+    import:
+      - "application_qa.yml"
+      - "application_prod.yml"
+  profiles:
+    active:
+      - "qa"
 
 build:
-  version: "1.0"
+  version: "3.0"
 
 accounts:
-  message: "Welcome to the Accounts Service APIs of JK Bank"
+  message: "Welcome to the Accounts Service local APIs of JK Bank"
   contactDetails:
     name: "JK"
     email: "jk@jkbank.com"
