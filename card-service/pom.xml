@@ -127,7 +127,7 @@
 				<version>3.5.1</version>
 				<configuration>
 					<to>
-						<image>jkdev1998/${project.artifactId}:tag1</image>
+						<image>jkdev1998/${project.artifactId}:tag2</image>
 					</to>
 				</configuration>
 			</plugin>
