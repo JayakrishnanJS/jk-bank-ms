@@ -1,6 +1,7 @@
 package com.jkbank.accounts.controller;
 
 import com.jkbank.accounts.constants.AccountsConstants;
+import com.jkbank.accounts.dto.AccountsContactInfoDto;
 import com.jkbank.accounts.dto.CustomerDto;
 import com.jkbank.accounts.dto.ErrorResponseDto;
 import com.jkbank.accounts.dto.ResponseDto;
@@ -43,6 +44,8 @@ public class AccountsController {
     private String buildVersion;
 
     private final Environment environment;
+
+    private final AccountsContactInfoDto accountsContactInfoDto;
 
     @Operation(
             summary = "Create Account REST API",
@@ -226,6 +229,32 @@ public class AccountsController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(environment.getProperty("java.version")); // Get java version from system properties in JVM using Environment
+    }
+
+    @Operation(
+            summary = "Get Contact Infro",
+            description = "Get contact information to reach out for any issue in accounts service"
+    )
+    @ApiResponses(
+            {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "HTTP Status OK"
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "HTTP Status INTERNAL SERVER ERROR",
+                            content = @Content(
+                                    schema = @Schema(implementation = ErrorResponseDto.class)
+                            )
+                    )
+            }
+    )
+    @GetMapping("/contact-info")
+    public ResponseEntity<AccountsContactInfoDto> getContactInfo() { // here we are returning the record class itself, but could return individual fields if needed
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(accountsContactInfoDto); // Get contact info from AccountsContactInfoDto record class bound to application.yml
     }
 }
 
