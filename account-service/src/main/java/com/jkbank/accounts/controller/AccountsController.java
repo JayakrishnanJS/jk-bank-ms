@@ -14,6 +14,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,12 +27,20 @@ import org.springframework.web.bind.annotation.*;
      description = "CRUD REST APIs - Create, Read, Update, Delete account details"
 )
 @RestController
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RequestMapping(path="/api", produces = {MediaType.APPLICATION_JSON_VALUE})
 @Validated // @Valid required only where input is coming from the client
 public class AccountsController {
 
-    private IAccountsService iAccountsService; // autowired via constructor injection
+    private final IAccountsService iAccountsService; // autowired via constructor injection
+    /* buildVersion is a configuration property (from @Value), not a Spring Bean.
+    Spring doesn't know how to pass it into that constructor. So we use @RequiredArgsConstructor
+    by removing @AllArgsConstructor and make iAccountsService final while buildVersion non-final.
+    This annotation only generates a constructor for final fields. This allows Spring to
+    inject the Service via the constructor, while the buildVersion is injected separately
+    via the @Value annotation in the field.*/
+    @Value("${build.version}")
+    private String buildVersion;
 
     @Operation(
             summary = "Create Account REST API",
@@ -162,6 +172,32 @@ public class AccountsController {
                     .status(HttpStatus.EXPECTATION_FAILED)
                     .body(new ResponseDto((AccountsConstants.STATUS_417), AccountsConstants.MESSAGE_417_DELETE));
         }
+    }
+
+    @Operation(
+            summary = "Get Build Version",
+            description = "Get Build information of accounts service deployed into the server"
+    )
+    @ApiResponses(
+            {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "HTTP Status OK"
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "HTTP Status INTERNAL SERVER ERROR",
+                            content = @Content(
+                                    schema = @Schema(implementation = ErrorResponseDto.class)
+                            )
+                    )
+            }
+    )
+    @GetMapping("/build-info")
+    public ResponseEntity<String> getBuildInfo() {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(buildVersion);
     }
 }
 

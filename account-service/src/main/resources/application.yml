@@ -17,3 +17,6 @@ spring:
   jackson:
     mapper:
       sort-properties-alphabetically: false
+
+build:
+  version: "1.0"
