@@ -8,6 +8,7 @@ spring:
       server:
         native:
           search-locations: "classpath:/config"
-
+# To use a local folder for config files, uncomment the below line and comment the above line
+#           search-locations: "file:///C:/Documents/config-local-folder"
 server:
     port: 8071
