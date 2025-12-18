@@ -197,7 +197,7 @@ public class CardsController {
 
     @Operation(
             summary = "Get Java Version",
-            description = "Get Java version information of the server where accounts service is deployed"
+            description = "Get Java version information of the server where cards service is deployed"
     )
     @ApiResponses(
             {
