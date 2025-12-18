@@ -1,0 +1,11 @@
+build:
+  version: "3.0"
+
+accounts:
+  message: "Welcome to the Accounts Service local APIs of JK Bank"
+  contactDetails:
+    name: "JK"
+    email: "jk@jkbank.com"
+  onCallSupport:
+  - 1800-123-456
+  - 1800-987-654

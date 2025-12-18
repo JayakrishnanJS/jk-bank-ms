@@ -1,0 +1,11 @@
+build:
+  version: "2.0"
+
+cards:
+  message: "Welcome to the Cards Service APIs of QA environment of JK Bank"
+  contactDetails:
+    name: "Sarith - QA Lead"
+    email: "sarith@jkbank.com"
+  onCallSupport:
+    - 1800-123-556
+    - 1800-987-654
