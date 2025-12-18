@@ -19,8 +19,8 @@ spring:
       sort-properties-alphabetically: false
   config:
     import:
-      - "application_qa.yml"
-      - "application_prod.yml"
+      - "application-qa.yml"
+      - "application-prod.yml"
   profiles:
     active:
       - "qa"
