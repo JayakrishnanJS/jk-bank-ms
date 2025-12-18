@@ -236,7 +236,7 @@ public class AccountsController {
     }
 
     @Operation(
-            summary = "Get Contact Infro",
+            summary = "Get Contact Info",
             description = "Get contact information to reach out for any issue in accounts service"
     )
     @ApiResponses(
