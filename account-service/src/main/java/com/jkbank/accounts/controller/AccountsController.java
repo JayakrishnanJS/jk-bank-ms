@@ -34,17 +34,21 @@ import org.springframework.web.bind.annotation.*;
 public class AccountsController {
 
     private final IAccountsService iAccountsService; // autowired via constructor injection
+
     /* buildVersion is a configuration property (from @Value), not a Spring Bean.
     Spring doesn't know how to pass it into that constructor. So we use @RequiredArgsConstructor
     by removing @AllArgsConstructor and make iAccountsService final while buildVersion non-final.
     This annotation only generates a constructor for final fields. This allows Spring to
     inject the Service via the constructor, while the buildVersion is injected separately
     via the @Value annotation in the field.*/
+    // build.version is defined in application.properties
     @Value("${build.version}")
     private String buildVersion;
 
+    // Environment is a Spring Bean that is used to access properties from application.properties or application.yml
     private final Environment environment;
 
+    // AccountsContactInfoDto is a record class bound to application.yml properties using @ConfigurationProperties
     private final AccountsContactInfoDto accountsContactInfoDto;
 
     @Operation(
