@@ -1,6 +1,13 @@
 server:
   port: 10000
 spring:
+  application:
+    # same name as in config files
+    name: "loans"
+  profiles:
+    active: "prod"
+  #  profiles can be overridden by environment variable or JVM parameter or command line argument
+  #  e.g., -Dspring.profiles.active=qa
   datasource:
     url: jdbc:h2:mem:testdb
     driverClassName: org.h2.Driver
@@ -18,22 +25,7 @@ spring:
     mapper:
       sort-properties-alphabetically: false
   config:
-    import:
-      - "application-qa.yml"
-      - "application-prod.yml"
-  profiles:
-    active:
-      - "prod"
-
-build:
-  version: "3.0"
-
-loans:
-  message: "Welcome to the Loans Service local APIs of JK Bank"
-  contactDetails:
-    name: "JK"
-    email: "jk@jkbank.com"
-  onCallSupport:
-    - 1800-123-456
-    - 1800-987-654
+    import: "optional:configserver:http://localhost:8071"
+    # optional => avoid failure if config server is down
+    # configserver => indicates that the source is a config server, not the actual name of config server
 
