@@ -11,6 +11,8 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
+    networks:
+      - jkbank
   configserver:
     image: "jkdev1998/configserver:tag2"
     container_name: configserver-ms
