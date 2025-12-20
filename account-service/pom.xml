@@ -151,7 +151,7 @@
 				<version>3.5.1</version>
 				<configuration>
 					<to>
-						<image>jkdev1998/${project.artifactId}:tag3</image>
+						<image>jkdev1998/${project.artifactId}:tag4</image>
 					</to>
 				</configuration>
 			</plugin>
