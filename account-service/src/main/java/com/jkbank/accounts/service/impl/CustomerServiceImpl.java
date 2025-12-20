@@ -1,0 +1,52 @@
+package com.jkbank.accounts.service.impl;
+
+import com.jkbank.accounts.dto.*;
+import com.jkbank.accounts.entity.Accounts;
+import com.jkbank.accounts.entity.Customer;
+import com.jkbank.accounts.exception.ResourceNotFoundException;
+import com.jkbank.accounts.mapper.AccountsMapper;
+import com.jkbank.accounts.mapper.CustomerMapper;
+import com.jkbank.accounts.repository.AccountsRepository;
+import com.jkbank.accounts.repository.CustomerRepository;
+import com.jkbank.accounts.service.ICustomerService;
+import com.jkbank.accounts.service.client.CardsFeignClient;
+import com.jkbank.accounts.service.client.LoansFeignClient;
+import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+@Service
+@AllArgsConstructor
+public class CustomerServiceImpl implements ICustomerService {
+
+    private AccountsRepository accountsRepository;
+    private CustomerRepository customerRepository;
+    private CardsFeignClient cardsFeignClient;
+    private LoansFeignClient loansFeignClient;
+
+    /**
+     * Fetch Customer Details by Mobile Number
+     * @param mobileNumber
+     * @return CustomerDetailsDto containing customer, account, loan, and card details
+     */
+    @Override
+    public CustomerDetailsDto fetchCustomerDetails(String mobileNumber) {
+        Customer customer = customerRepository.findByMobileNumber(mobileNumber).orElseThrow(
+                () -> new ResourceNotFoundException("Customer", "mobileNumber", mobileNumber)
+        );
+        Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId()).orElseThrow(
+                () -> new ResourceNotFoundException("Account", "customerId", customer.getCustomerId().toString())
+        );
+        CustomerDetailsDto customerDetailsDto = CustomerMapper.mapToCustomerDetailsDto(customer, new CustomerDetailsDto());
+        customerDetailsDto.setAccountsDto(AccountsMapper.mapToAccountsDto(accounts, new AccountsDto()));
+
+        // Fetch loan details using LoansFeignClient
+        ResponseEntity<LoansDto> loansDtoResponseEntity = loansFeignClient.fetchLoanDetails(mobileNumber);
+        customerDetailsDto.setLoansDto(loansDtoResponseEntity.getBody()); // getBody() returns the LoansDto object
+        // Fetch card details using CardsFeignClient
+        ResponseEntity<CardsDto> cardsDtoResponseEntity = cardsFeignClient.fetchCardDetails(mobileNumber);
+        customerDetailsDto.setCardsDto(cardsDtoResponseEntity.getBody()); // getBody() returns the LoansDto object
+
+        return customerDetailsDto;
+    }
+}

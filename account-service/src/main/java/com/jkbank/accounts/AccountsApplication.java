@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.info.License;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
@@ -18,6 +19,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @EntityScan(basePackages = "com.jkbank.accounts.entity")*/
 @EnableJpaAuditing(auditorAwareRef = "auditAwareImpl") // enabling JPA Auditing feature in the application to auto populate createdAt, updatedAt fields
 @EnableConfigurationProperties(value = AccountsContactInfoDto.class) // to enable binding of configuration properties to AccountsContactInfoDto record class
+@EnableFeignClients
 @OpenAPIDefinition(
 		info = @Info(
 				title = "Accounts Service API Documentation",
