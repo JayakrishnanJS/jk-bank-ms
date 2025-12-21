@@ -49,7 +49,7 @@ services:
       service: network-deploy-service
 
   configserver:
-    image: "jkdev1998/configserver:tag3"
+    image: "jkdev1998/configserver:tag4"
     container_name: configserver-ms
     ports:
       - "8071:8071"
@@ -70,8 +70,34 @@ services:
       file: common-config.yml
       service: microservice-base-config
 
+  eurekaserver:
+    image: "jkdev1998/eurekaserver:tag4"
+    container_name: eurekaserver-ms
+    ports:
+      - "8070:8070"
+    depends_on:
+      rabbit:
+        condition: service_healthy
+      configserver:
+        condition: service_healthy
+    healthcheck:
+      test: "curl --fail --silent localhost:8070/actuator/health/readiness | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    extends:
+      file: common-config.yml
+      service: microservice-configserver-config
+    environment:
+      SPRING_APPLICATION_NAME: "eurekaserver"
+
   accounts:
-    image: "jkdev1998/accounts:tag3"
+    image: "jkdev1998/accounts:tag4"
     container_name: accounts-ms
     ports:
       - "9080:9080"
@@ -83,12 +109,14 @@ services:
         condition: service_healthy
       configserver:
         condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
     extends:
       file: common-config.yml
-      service: microservice-configserver-config
+      service: microservice-eureka-config
 
   loans:
-    image: "jkdev1998/loans:tag3"
+    image: "jkdev1998/loans:tag4"
     container_name: loans-ms
     ports:
       - "10000:10000"
@@ -100,12 +128,14 @@ services:
         condition: service_healthy
       configserver:
         condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
     extends:
       file: common-config.yml
-      service: microservice-configserver-config
+      service: microservice-eureka-config
 
   cards:
-    image: "jkdev1998/cards:tag3"
+    image: "jkdev1998/cards:tag4"
     container_name: cards-ms
     ports:
       - "9090:9090"
@@ -117,9 +147,11 @@ services:
         condition: service_healthy
       configserver:
         condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
     extends:
       file: common-config.yml
-      service: microservice-configserver-config
+      service: microservice-eureka-config
 
 networks:
   jkbank:
