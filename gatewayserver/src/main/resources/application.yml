@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: "gatewayserver"
+  jackson:
+    mapper:
+      sort-properties-alphabetically: false
+  config:
+    import: "optional:configserver:http://localhost:8071"
+    # optional => avoid failure if config server is down
+    # configserver => indicates that the source is a config server, not the actual name of config server
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+              lowerCaseServiceId: true
+  rabbitmq:
+    host: "localhost"
+    port: 5672
+    username: "guest"
+    password: "guest"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    gateway:
+#      enabled: true
+      access: unrestricted
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: "gatewayserver"
+    description: "Gateway Server for JK Bank"
+    version: "1.0.0"
