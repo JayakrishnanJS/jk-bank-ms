@@ -2,6 +2,9 @@ package com.jkbank.gatewayserver;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.gateway.route.RouteLocator;
+import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
+import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 public class GatewayserverApplication {
@@ -10,4 +13,21 @@ public class GatewayserverApplication {
 		SpringApplication.run(GatewayserverApplication.class, args);
 	}
 
+	@Bean
+	public RouteLocator jkBankRouteConfig(RouteLocatorBuilder routeLocatorBuilder) {
+		return routeLocatorBuilder.routes()
+				.route(p -> p
+						.path("/jkbank/accounts/**")
+						.filters(f -> f.rewritePath("/jkbank/accounts/(?<segment>.*)", "/${segment}"))
+						.uri("lb://ACCOUNTS"))// Logical name of the service registered with Eureka
+				.route(p -> p
+						.path("/jkbank/loans/**")
+						.filters(f -> f.rewritePath("/jkbank/loans/(?<segment>.*)", "/${segment}"))
+						.uri("lb://LOANS"))
+				.route(p -> p
+						.path("/jkbank/cards/**")
+						.filters(f -> f.rewritePath("/jkbank/cards/(?<segment>.*)", "/${segment}"))
+						.uri("lb://CARDS"))
+				.build();
+	}
 }
