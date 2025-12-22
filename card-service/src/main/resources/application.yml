@@ -56,3 +56,9 @@ info:
     name: "cards"
     description: "Cards Microservice for JK Bank"
     version: "1.0.0"
+
+logging:
+  level:
+    com:
+      jkbank:
+        cards: DEBUG

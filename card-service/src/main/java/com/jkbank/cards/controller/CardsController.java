@@ -15,6 +15,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
@@ -32,6 +34,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Validated
 public class CardsController {
+
+    private static final Logger logger = LoggerFactory.getLogger(CardsController.class);
 
     private final ICardsService icardsService;
 
@@ -62,8 +66,8 @@ public class CardsController {
     )
     @PostMapping("/create")
     public ResponseEntity<ResponseDto> createCard(@Valid @RequestParam
-                                                      @Pattern(regexp="(^[0-9]{10})",message = "Mobile number must be 10 digits")
-                                                      String mobileNumber) {
+                                                  @Pattern(regexp = "(^[0-9]{10})", message = "Mobile number must be 10 digits")
+                                                  String mobileNumber) {
         icardsService.createCard(mobileNumber);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -88,9 +92,12 @@ public class CardsController {
             )
     })
     @GetMapping("/fetch")
-    public ResponseEntity<CardsDto> fetchCardDetails(@RequestParam
-                                                         @Pattern(regexp="(^[0-9]{10})",message = "Mobile number must be 10 digits")
-                                                         String mobileNumber) {
+    public ResponseEntity<CardsDto> fetchCardDetails(@RequestHeader("jkbank-correlation-id")
+                                                     String correlationId,
+                                                     @RequestParam
+                                                     @Pattern(regexp = "(^[0-9]{10})", message = "Mobile number must be 10 digits")
+                                                     String mobileNumber) {
+        logger.debug("jkbank-correlation-id found: {} ", correlationId);
         CardsDto cardsDto = icardsService.fetchCard(mobileNumber);
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -121,11 +128,11 @@ public class CardsController {
     @PutMapping("/update")
     public ResponseEntity<ResponseDto> updateCardDetails(@Valid @RequestBody CardsDto cardsDto) {
         boolean isUpdated = icardsService.updateCard(cardsDto);
-        if(isUpdated) {
+        if (isUpdated) {
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(new ResponseDto(CardsConstants.STATUS_200, CardsConstants.MESSAGE_200));
-        }else{
+        } else {
             return ResponseEntity
                     .status(HttpStatus.EXPECTATION_FAILED)
                     .body(new ResponseDto(CardsConstants.STATUS_417, CardsConstants.MESSAGE_417_UPDATE));
@@ -155,14 +162,14 @@ public class CardsController {
     })
     @DeleteMapping("/delete")
     public ResponseEntity<ResponseDto> deleteCard(@RequestParam
-                                                  @Pattern(regexp="(^[0-9]{10})",message = "Mobile number must be 10 digits")
-                                                      String mobileNumber) {
+                                                  @Pattern(regexp = "(^[0-9]{10})", message = "Mobile number must be 10 digits")
+                                                  String mobileNumber) {
         boolean isDeleted = icardsService.deleteCard(mobileNumber);
-        if(isDeleted) {
+        if (isDeleted) {
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(new ResponseDto(CardsConstants.STATUS_200, CardsConstants.MESSAGE_200));
-        }else{
+        } else {
             return ResponseEntity
                     .status(HttpStatus.EXPECTATION_FAILED)
                     .body(new ResponseDto(CardsConstants.STATUS_417, CardsConstants.MESSAGE_417_DELETE));

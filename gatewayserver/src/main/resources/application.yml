@@ -40,3 +40,9 @@ info:
     name: "gatewayserver"
     description: "Gateway Server for JK Bank"
     version: "1.0.0"
+
+logging:
+  level:
+    com:
+      jkbank:
+        gatewayserver: DEBUG
