@@ -11,30 +11,32 @@ import java.time.LocalDateTime;
 @SpringBootApplication
 public class GatewayserverApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(GatewayserverApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(GatewayserverApplication.class, args);
+    }
 
-	@Bean
-	public RouteLocator jkBankRouteConfig(RouteLocatorBuilder routeLocatorBuilder) {
-		return routeLocatorBuilder.routes()
-				.route(p -> p
-						.path("/jkbank/accounts/**")
-						.filters(f -> f.rewritePath("/jkbank/accounts/(?<segment>.*)", "/${segment}")
-								.addResponseHeader("X-Response-Time", LocalDateTime.now().toString())
-								.circuitBreaker(config -> config.setName("accountsCircuitBreaker"))
-								)
-						.uri("lb://ACCOUNTS"))// Logical name of the service registered with Eureka
-				.route(p -> p
-						.path("/jkbank/loans/**")
-						.filters(f -> f.rewritePath("/jkbank/loans/(?<segment>.*)", "/${segment}")
-								.addResponseHeader("X-Response-Time", LocalDateTime.now().toString()))
-						.uri("lb://LOANS"))
-				.route(p -> p
-						.path("/jkbank/cards/**")
-						.filters(f -> f.rewritePath("/jkbank/cards/(?<segment>.*)", "/${segment}")
-								.addResponseHeader("X-Response-Time", LocalDateTime.now().toString()))
-						.uri("lb://CARDS"))
-				.build();
-	}
+    @Bean
+    public RouteLocator jkBankRouteConfig(RouteLocatorBuilder routeLocatorBuilder) {
+        return routeLocatorBuilder.routes()
+                .route(p -> p
+                        .path("/jkbank/accounts/**")
+                        .filters(f -> f.rewritePath("/jkbank/accounts/(?<segment>.*)", "/${segment}")
+                                .addResponseHeader("X-Response-Time", LocalDateTime.now().toString())
+                                .circuitBreaker(config -> config.setName("accountsCircuitBreaker")
+                                        .setFallbackUri("forward:/contactSupport"))
+
+                        )
+                        .uri("lb://ACCOUNTS"))// Logical name of the service registered with Eureka
+                .route(p -> p
+                        .path("/jkbank/loans/**")
+                        .filters(f -> f.rewritePath("/jkbank/loans/(?<segment>.*)", "/${segment}")
+                                .addResponseHeader("X-Response-Time", LocalDateTime.now().toString()))
+                        .uri("lb://LOANS"))
+                .route(p -> p
+                        .path("/jkbank/cards/**")
+                        .filters(f -> f.rewritePath("/jkbank/cards/(?<segment>.*)", "/${segment}")
+                                .addResponseHeader("X-Response-Time", LocalDateTime.now().toString()))
+                        .uri("lb://CARDS"))
+                .build();
+    }
 }
