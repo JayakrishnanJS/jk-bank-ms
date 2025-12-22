@@ -6,6 +6,7 @@ import com.jkbank.accounts.dto.CustomerDto;
 import com.jkbank.accounts.dto.ErrorResponseDto;
 import com.jkbank.accounts.dto.ResponseDto;
 import com.jkbank.accounts.service.IAccountsService;
+import io.github.resilience4j.retry.annotation.Retry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,6 +16,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
@@ -48,7 +51,9 @@ public class AccountsController {
     // Environment is a Spring Bean that is used to access properties from application.properties or application.yml
     private final Environment environment;
 
-    // AccountsContactInfoDto is a record class bound to application.yml properties using @ConfigurationProperties
+    private static final Logger logger = LoggerFactory.getLogger(AccountsController.class);
+
+    // AccountsContactInfoDto was a record class bound to application.yml properties using @ConfigurationProperties
     private final AccountsContactInfoDto accountsContactInfoDto;
 
     @Operation(
@@ -202,14 +207,28 @@ public class AccountsController {
                     )
             }
     )
+    @Retry(name = "getBuildInfo", fallbackMethod = "getBuildInfoFallback")
     @GetMapping("/build-info")
     public ResponseEntity<String> getBuildInfo() {
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(buildVersion);
+        logger.debug("getBuildInfo called");
+        throw new NullPointerException();
+//        return ResponseEntity
+//                .status(HttpStatus.OK)
+//                .body(buildVersion);
     }
 
-    @Operation(
+// 1. Fallback method must have name as specified in the fallbackMethod attribute of @Retry
+// 2. Fallback method must have the same return type as the original method
+// 3. Fallback method must have the same parameters as the original method, plus an optional Throwable parameter at the end
+    public ResponseEntity<String> getBuildInfoFallback(Throwable throwable) {
+        logger.debug("getBuildInfoFallback invoked");
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body("0.9"); // return a default/fallback build version
+    }
+
+
+        @Operation(
             summary = "Get Java Version",
             description = "Get Java version information of the server where accounts service is deployed"
     )
