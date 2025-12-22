@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient("cards") // same name as in cards service -> application.properties -> spring.application.name
+@FeignClient(name = "cards", fallback = CardsFallBack.class) // same name as in cards service -> application.properties -> spring.application.name
 public interface CardsFeignClient {
 
     @GetMapping(value = "/api/fetch", consumes = "application/json") // same as in CardsController.java -> @RequestMapping(path = "/api", produces = {MediaType.APPLICATION_JSON_VALUE}) + @GetMapping("/fetch")

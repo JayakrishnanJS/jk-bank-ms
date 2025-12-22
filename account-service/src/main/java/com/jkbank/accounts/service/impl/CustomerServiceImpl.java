@@ -43,11 +43,14 @@ public class CustomerServiceImpl implements ICustomerService {
         // Fetch loan details using LoansFeignClient
         // add correlationId as first parameter to propagate it to downstream service
         ResponseEntity<LoansDto> loansDtoResponseEntity = loansFeignClient.fetchLoanDetails(correlationId, mobileNumber);
-        customerDetailsDto.setLoansDto(loansDtoResponseEntity.getBody()); // getBody() returns the LoansDto object
+        if(null != loansDtoResponseEntity) {
+            customerDetailsDto.setLoansDto(loansDtoResponseEntity.getBody()); // getBody() returns the LoansDto object
+        }
         // Fetch card details using CardsFeignClient
         ResponseEntity<CardsDto> cardsDtoResponseEntity = cardsFeignClient.fetchCardDetails(correlationId, mobileNumber);
-        customerDetailsDto.setCardsDto(cardsDtoResponseEntity.getBody()); // getBody() returns the LoansDto object
-
+        if(null != cardsDtoResponseEntity) {
+            customerDetailsDto.setCardsDto(cardsDtoResponseEntity.getBody()); // getBody() returns the LoansDto object
+        }
         return customerDetailsDto;
     }
 }

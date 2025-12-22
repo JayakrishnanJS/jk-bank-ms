@@ -24,6 +24,10 @@ spring:
     import: "optional:configserver:http://localhost:8071"
     # optional => avoid failure if config server is down
     # configserver => indicates that the source is a config server, not the actual name of config server
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
   rabbitmq:
     host: "localhost"
     port: 5672
@@ -65,3 +69,12 @@ logging:
     com:
       jkbank:
         accounts: DEBUG
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 2
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
