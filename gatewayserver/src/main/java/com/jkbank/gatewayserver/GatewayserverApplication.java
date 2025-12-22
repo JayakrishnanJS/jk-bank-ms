@@ -21,7 +21,9 @@ public class GatewayserverApplication {
 				.route(p -> p
 						.path("/jkbank/accounts/**")
 						.filters(f -> f.rewritePath("/jkbank/accounts/(?<segment>.*)", "/${segment}")
-								.addResponseHeader("X-Response-Time", LocalDateTime.now().toString()))
+								.addResponseHeader("X-Response-Time", LocalDateTime.now().toString())
+								.circuitBreaker(config -> config.setName("accountsCircuitBreaker"))
+								)
 						.uri("lb://ACCOUNTS"))// Logical name of the service registered with Eureka
 				.route(p -> p
 						.path("/jkbank/loans/**")
