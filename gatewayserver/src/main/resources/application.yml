@@ -16,8 +16,9 @@ spring:
             locator:
               enabled: true
               lowerCaseServiceId: true
-
-
+          httpclient:
+            connect-timeout: 1000
+            response-timeout: 5s
   rabbitmq:
     host: "localhost"
     port: 5672
