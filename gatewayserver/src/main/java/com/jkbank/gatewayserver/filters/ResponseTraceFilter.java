@@ -31,10 +31,13 @@ public class ResponseTraceFilter {
                 HttpHeaders requestHeaders = exchange.getRequest().getHeaders();
                 // Retrieve the correlation ID from request headers using utility
                 String correlationID = filterUtility.getCorrelationId(requestHeaders);
-                // Log the correlation ID for debugging purposes
-                logger.debug("Updated the correlation id to the outbound headers : {}", correlationID);
-                // Add correlation ID to response headers for tracing across services
-                exchange.getResponse().getHeaders().add(filterUtility.CORRELATION_ID, correlationID);
+                // Check if the correlation ID is already present in the response headers, otherwise retries may add multiple IDs
+                if(exchange.getResponse().getHeaders().get(filterUtility.CORRELATION_ID) == null) {
+                    // Log the correlation ID for debugging purposes
+                    logger.debug("Updated the correlation id to the outbound headers : {}", correlationID);
+                    // Add correlation ID to response headers for tracing across services
+                    exchange.getResponse().getHeaders().add(filterUtility.CORRELATION_ID, correlationID);
+                }
             }));
         };
     }
