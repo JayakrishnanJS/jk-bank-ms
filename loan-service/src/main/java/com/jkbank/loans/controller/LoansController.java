@@ -251,6 +251,7 @@ public class LoansController {
     @GetMapping("/contact-info")
     public ResponseEntity<LoansContactInfoDto> getContactInfo() { // here we are returning the record class itself, but could return individual fields if needed
         logger.debug("Invoked Loans Contact Info API");
+        //throw new NullPointerException();
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(loansContactInfoDto); // Get contact info from CardsContactInfoDto record class bound to application.yml
