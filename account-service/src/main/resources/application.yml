@@ -86,8 +86,12 @@ resilience4j:
         enable-exponential-backoff: true
         exponential-backoff-multiplier: 2
         ignore-exceptions:
-          - java.lang.NullPointerException
-#       not retry for NullPointerException
+          - java.lang.NullPointerException # not retry for NullPointerException
         retry-exceptions:
-          - java.util.concurrent.TimeoutException
-#       retry only for TimeoutException
+          - java.util.concurrent.TimeoutException # retry only for TimeoutException
+  ratelimiter:
+    configs:
+        default:
+          timeout-duration: 1000 # max wait time to acquire permission
+          limit-refresh-period: 5000 # time period for rate limiting
+          limit-for-period: 1 # max calls allowed in the time period

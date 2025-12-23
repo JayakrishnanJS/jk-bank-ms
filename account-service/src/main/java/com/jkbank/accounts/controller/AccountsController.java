@@ -6,6 +6,7 @@ import com.jkbank.accounts.dto.CustomerDto;
 import com.jkbank.accounts.dto.ErrorResponseDto;
 import com.jkbank.accounts.dto.ResponseDto;
 import com.jkbank.accounts.service.IAccountsService;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -250,11 +251,21 @@ public class AccountsController {
                     )
             }
     )
+    @RateLimiter(name = "getJavaVersion", fallbackMethod = "getJavaVersionFallback")
     @GetMapping("/java-version")
     public ResponseEntity<String> getJavaVersion() {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(environment.getProperty("java.version")); // Get java version from system properties in JVM using Environment
+    }
+
+    // 1. Fallback method must have name as specified in the fallbackMethod attribute of @Retry
+    // 2. Fallback method must have the same return type as the original method
+    // 3. Fallback method must have the same parameters as the original method, plus an optional Throwable parameter at the end
+    public ResponseEntity<String> getJavaVersionFallback(Throwable throwable) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body("17.0.0"); // return a default/fallback java version
     }
 
     @Operation(
