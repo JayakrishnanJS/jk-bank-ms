@@ -67,5 +67,10 @@ public class GatewayserverApplication {
                 .circuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
                 .timeLimiterConfig(TimeLimiterConfig.custom().timeoutDuration(Duration.ofSeconds(4)).build()).build());
         // All circuit breakers created by this factory will have a timeout of 4 seconds
+        // circuitBreakerConfig can also be customized here:
+        // CircuitBreakerConfig.custom()
+        //    .failureRateThreshold(50)
+        //    .waitDurationInOpenState(Duration.ofSeconds(30))
+        //    .build()
     }
 }
