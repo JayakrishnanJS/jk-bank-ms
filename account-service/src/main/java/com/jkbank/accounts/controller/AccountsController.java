@@ -26,6 +26,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.concurrent.TimeoutException;
+
 @Tag(
      name = "CRUD REST APIs for Accounts in JK Bank Application",
      description = "CRUD REST APIs - Create, Read, Update, Delete account details"
@@ -211,10 +213,11 @@ public class AccountsController {
     @GetMapping("/build-info")
     public ResponseEntity<String> getBuildInfo() {
         logger.debug("getBuildInfo called");
-        throw new NullPointerException();
-//        return ResponseEntity
-//                .status(HttpStatus.OK)
-//                .body(buildVersion);
+        //throw new NullPointerException();
+        //throw new TimeoutException();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(buildVersion);
     }
 
 // 1. Fallback method must have name as specified in the fallbackMethod attribute of @Retry
