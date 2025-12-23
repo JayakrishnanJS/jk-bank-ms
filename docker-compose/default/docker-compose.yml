@@ -1,4 +1,15 @@
 services:
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
+      timeout: 10s
+      retries: 10
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
   accountsdb:
     image: mysql
     container_name: accountsdb
@@ -49,7 +60,7 @@ services:
       service: network-deploy-service
 
   configserver:
-    image: "jkdev1998/configserver:tag5"
+    image: "jkdev1998/configserver:tag6"
     container_name: configserver-ms
     ports:
       - "8071:8071"
@@ -71,7 +82,7 @@ services:
       service: microservice-base-config
 
   eurekaserver:
-    image: "jkdev1998/eurekaserver:tag5"
+    image: "jkdev1998/eurekaserver:tag6"
     container_name: eurekaserver-ms
     ports:
       - "8070:8070"
@@ -97,7 +108,7 @@ services:
         SPRING_APPLICATION_NAME: "eurekaserver"
 
   accounts:
-    image: "jkdev1998/accounts:tag5"
+    image: "jkdev1998/accounts:tag6"
     container_name: accounts-ms
     ports:
         - "9080:9080"
@@ -122,7 +133,7 @@ services:
       service: microservice-eureka-config
 
   loans:
-    image: "jkdev1998/loans:tag5"
+    image: "jkdev1998/loans:tag6"
     container_name: loans-ms
     ports:
       - "10000:10000"
@@ -148,8 +159,8 @@ services:
 
 # Additional instance of loans microservice for testing load balancing
   loans1:
-    image: "jkdev1998/loans:tag5"
-    container_name: loans-ms1s
+    image: "jkdev1998/loans:tag6"
+    container_name: loans-ms1
     ports:
       - "10001:10000"
     healthcheck:
@@ -173,7 +184,7 @@ services:
       service: microservice-eureka-config
 
   cards:
-    image: "jkdev1998/cards:tag5"
+    image: "jkdev1998/cards:tag6"
     container_name: cards-ms
     ports:
       - "9090:9090"
@@ -198,7 +209,7 @@ services:
       service: microservice-eureka-config
 
   gatewayserver:
-    image: "jkdev1998/gatewayserver:tag5"
+    image: "jkdev1998/gatewayserver:tag6"
     container_name: gatewayserver-ms
     ports:
       - "8072:8072"
@@ -211,8 +222,14 @@ services:
         condition: service_healthy
       cards:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       SPRING_APPLICATION_NAME: "gatewayserver"
+      SPRING_DATA_REDIS_CONNECT-TIMEOUT: 2s
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_TIMEOUT: 1s
     extends:
       file: common-config.yml
       service: microservice-eureka-config
