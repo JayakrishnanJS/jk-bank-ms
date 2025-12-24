@@ -60,7 +60,7 @@ services:
       service: network-deploy-service
 
   configserver:
-    image: "jkdev1998/configserver:tag6"
+    image: "jkdev1998/configserver:tag7"
     container_name: configserver-ms
     ports:
       - "8071:8071"
@@ -82,7 +82,7 @@ services:
       service: microservice-base-config
 
   eurekaserver:
-    image: "jkdev1998/eurekaserver:tag6"
+    image: "jkdev1998/eurekaserver:tag7"
     container_name: eurekaserver-ms
     ports:
       - "8070:8070"
@@ -105,13 +105,13 @@ services:
       file: common-config.yml
       service: microservice-configserver-config
     environment:
-        SPRING_APPLICATION_NAME: "eurekaserver"
+      SPRING_APPLICATION_NAME: "eurekaserver"
 
   accounts:
-    image: "jkdev1998/accounts:tag6"
+    image: "jkdev1998/accounts:tag7"
     container_name: accounts-ms
     ports:
-        - "9080:9080"
+      - "9080:9080"
     healthcheck:
       test: "curl --fail --silent localhost:9080/actuator/health/readiness | grep UP || exit 1"
       interval: 10s
@@ -133,7 +133,7 @@ services:
       service: microservice-eureka-config
 
   loans:
-    image: "jkdev1998/loans:tag6"
+    image: "jkdev1998/loans:tag7"
     container_name: loans-ms
     ports:
       - "10000:10000"
@@ -157,9 +157,9 @@ services:
       file: common-config.yml
       service: microservice-eureka-config
 
-# Additional instance of loans microservice for testing load balancing
+  # Additional instance of loans microservice for testing load balancing
   loans1:
-    image: "jkdev1998/loans:tag6"
+    image: "jkdev1998/loans:tag7"
     container_name: loans-ms1
     ports:
       - "10001:10000"
@@ -184,7 +184,7 @@ services:
       service: microservice-eureka-config
 
   cards:
-    image: "jkdev1998/cards:tag6"
+    image: "jkdev1998/cards:tag7"
     container_name: cards-ms
     ports:
       - "9090:9090"
@@ -209,7 +209,7 @@ services:
       service: microservice-eureka-config
 
   gatewayserver:
-    image: "jkdev1998/gatewayserver:tag6"
+    image: "jkdev1998/gatewayserver:tag7"
     container_name: gatewayserver-ms
     ports:
       - "8072:8072"
@@ -237,4 +237,3 @@ services:
 networks:
   jkbank:
     driver: "bridge"
-
