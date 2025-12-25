@@ -97,8 +97,10 @@ public class CardsController {
                                                      @RequestParam
                                                      @Pattern(regexp = "(^[0-9]{10})", message = "Mobile number must be 10 digits")
                                                      String mobileNumber) {
-        logger.debug("jkbank-correlation-id found: {} ", correlationId);
+        //logger.debug("jkbank-correlation-id found: {} ", correlationId);
+        logger.debug("fetchCardDetails method execution started for mobile number: {} ", mobileNumber);
         CardsDto cardsDto = icardsService.fetchCard(mobileNumber);
+        logger.debug("fetchCardDetails method execution completed for mobile number: {} ", mobileNumber);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(cardsDto);
