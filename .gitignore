@@ -1,0 +1,13 @@
+/docker-compose/prod/.data/minio/.minio.sys/tmp/eeb48139-c65b-4702-aab3-08ae62607dee
+/docker-compose/prod/.data/minio/.minio.sys/format.json
+/docker-compose/prod/.data/minio/.minio.sys/buckets/.bloomcycle.bin/xl.meta
+/docker-compose/prod/.data/minio/.minio.sys/buckets/.usage.json/xl.meta
+/docker-compose/prod/.data/minio/.minio.sys/buckets/.usage-cache.bin/xl.meta
+/docker-compose/prod/.data/minio/.minio.sys/buckets/.usage-cache.bin.bkp/xl.meta
+/docker-compose/prod/.data/minio/.minio.sys/buckets/loki-data/.usage-cache.bin/xl.meta
+/docker-compose/prod/.data/minio/.minio.sys/buckets/loki-data/.usage-cache.bin.bkp/xl.meta
+/docker-compose/prod/.data/minio/.minio.sys/buckets/loki-ruler/.usage-cache.bin/xl.meta
+/docker-compose/prod/.data/minio/.minio.sys/buckets/loki-ruler/.usage-cache.bin.bkp/xl.meta
+/docker-compose/prod/.data/minio/.minio.sys/config/config.json/xl.meta
+/docker-compose/prod/.data/minio/.minio.sys/config/iam/format.json/xl.meta
+/docker-compose/prod/.data/minio/.minio.sys/pool.bin/xl.meta
