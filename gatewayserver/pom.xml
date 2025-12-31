@@ -66,6 +66,18 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-data-redis-reactive</artifactId>
 	</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-jose</artifactId>
+		</dependency>
 	<dependency>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
@@ -116,7 +128,7 @@
 				<version>3.5.1</version>
 				<configuration>
 					<to>
-						<image>jkdev1998/${project.artifactId}:tag7</image>
+						<image>jkdev1998/${project.artifactId}:tag8</image>
 					</to>
 				</configuration>
 			</plugin>
