@@ -4,10 +4,14 @@ services:
     container_name: keycloak
     ports:
       - "127.0.0.1:7080:8080"
-    environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: "admin"
-      KC_BOOTSTRAP_ADMIN_PASSWORD: "admin"
-    command: "start-dev"
+    #    environment:
+    #      KC_BOOTSTRAP_ADMIN_USERNAME: "admin"
+    #      KC_BOOTSTRAP_ADMIN_PASSWORD: "admin"
+    volumes:
+      - ../keycloak/master-realm.json:/opt/keycloak/data/import/master-realm.json:ro
+    command:
+      - "start-dev"
+      - "--import-realm"
     extends:
       file: common-config.yml
       service: network-deploy-service
@@ -287,7 +291,7 @@ services:
       service: network-deploy-service
 
   configserver:
-    image: "jkdev1998/configserver:tag8"
+    image: "jkdev1998/configserver:tag9"
     container_name: configserver-ms
     ports:
       - "8071:8071"
@@ -311,7 +315,7 @@ services:
       OTEL_SERVICE_NAME: "configserver"
 
   eurekaserver:
-    image: "jkdev1998/eurekaserver:tag8"
+    image: "jkdev1998/eurekaserver:tag9"
     container_name: eurekaserver-ms
     ports:
       - "8070:8070"
@@ -338,7 +342,7 @@ services:
       OTEL_SERVICE_NAME: "eurekaserver"
 
   accounts:
-    image: "jkdev1998/accounts:tag8"
+    image: "jkdev1998/accounts:tag9"
     container_name: accounts-ms
     healthcheck:
       test: "curl --fail --silent localhost:8080/actuator/health/readiness | grep UP || exit 1"
@@ -362,7 +366,7 @@ services:
       service: microservice-eureka-config
 
   loans:
-    image: "jkdev1998/loans:tag8"
+    image: "jkdev1998/loans:tag9"
     container_name: loans-ms
     healthcheck:
       test: "curl --fail --silent localhost:8090/actuator/health/readiness | grep UP || exit 1"
@@ -387,7 +391,7 @@ services:
 
   # Additional instance of loans microservice for testing load balancing
   loans1:
-    image: "jkdev1998/loans:tag8"
+    image: "jkdev1998/loans:tag9"
     container_name: loans-ms1
     healthcheck:
       test: "curl --fail --silent localhost:8090/actuator/health/readiness | grep UP || exit 1"
@@ -411,7 +415,7 @@ services:
       service: microservice-eureka-config
 
   cards:
-    image: "jkdev1998/cards:tag8"
+    image: "jkdev1998/cards:tag9"
     container_name: cards-ms
     healthcheck:
       test: "curl --fail --silent localhost:9000/actuator/health/readiness | grep UP || exit 1"
@@ -434,8 +438,20 @@ services:
       file: common-config.yml
       service: microservice-eureka-config
 
+  message:
+    image: "jkdev1998/message:tag9"
+    container_name: message-ms
+    depends_on:
+      rabbit:
+        condition: service_healthy
+    environment:
+      SPRING_RABBITMQ_HOST: "rabbit"
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
   gatewayserver:
-    image: "jkdev1998/gatewayserver:tag8"
+    image: "jkdev1998/gatewayserver:tag9"
     container_name: gatewayserver-ms
     ports:
       - "8072:8072"
