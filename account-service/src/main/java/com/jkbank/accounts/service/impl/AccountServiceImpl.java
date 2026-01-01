@@ -120,6 +120,26 @@ public class AccountServiceImpl implements IAccountsService {
     }
 
     /**
+     * Update communication status for the given account number.
+     *
+     * @param accountNumber the account number of the customer
+     * @return true if the update was successful, false otherwise
+     */
+    @Override
+    public boolean updateCommunicationStatus(Long accountNumber) {
+        boolean isUpdated = false;
+        if(accountNumber != null) {
+            Accounts accounts = accountsRepository.findById(accountNumber).orElseThrow(
+                    () -> new ResourceNotFoundException("Account", "AccountNumber", accountNumber.toString())
+            );
+            accounts.setCommunicationSwitch(true);
+            accountsRepository.save(accounts);
+            isUpdated = true;
+        }
+        return isUpdated;
+    }
+
+    /**
      * Create a new account for the given customer.
      * @param customer - the customer entity for whom the account is to be created
      * @return the newly created Accounts object
