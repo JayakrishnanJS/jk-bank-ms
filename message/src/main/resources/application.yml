@@ -11,3 +11,14 @@ spring:
       #email function executes first
       #Its output is passed to the sms function
       #The final result comes from the sms function
+    stream:
+      bindings:
+        emailsms-in-0: # input binding for the combined function email|sms
+          destination: send-communication # queue/topic name to listen to for incoming messages
+          group: ${spring.application.name} # consumer group name, typically set to the application name. It helps manage message consumption in a distributed system.
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    connection-timeout: 10s
