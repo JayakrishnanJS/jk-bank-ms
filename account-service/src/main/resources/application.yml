@@ -28,16 +28,21 @@ spring:
     openfeign:
       circuitbreaker:
         enabled: true
+    function:
+      definition: updateCommunication # function to process incoming messages from the queue/topic. Can be a single function or a chain of functions separated by semicolon (;)
+    stream:
+      bindings:
+        updateCommunication-in-0: # input binding for receiving messages from the queue/topic
+          destination: communication-sent # queue/topic name to listen to for incoming messages
+          group: ${spring.application.name} # consumer group name, typically set to the application name. It helps manage message consumption in a distributed system.
+        sendCommunication-out-0: # output binding for sending messages to the queue/topic
+          destination: send-communication # queue/topic name to send messages to
   rabbitmq:
     host: "localhost"
     port: 5672
     username: "guest"
     password: "guest"
     connection-timeout: 10s
-  stream:
-    bindings:
-      sendCommunication-out-0: # output binding for sending messages to the queue/topic
-        destination: send-communication # queue/topic name to send messages to
 
 management:
   endpoints:
