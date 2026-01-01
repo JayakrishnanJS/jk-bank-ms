@@ -2,6 +2,7 @@ package com.jkbank.accounts.service.impl;
 
 import com.jkbank.accounts.constants.AccountsConstants;
 import com.jkbank.accounts.dto.AccountsDto;
+import com.jkbank.accounts.dto.AccountsMsgDto;
 import com.jkbank.accounts.dto.CustomerDto;
 import com.jkbank.accounts.entity.Accounts;
 import com.jkbank.accounts.entity.Customer;
@@ -13,6 +14,9 @@ import com.jkbank.accounts.repository.AccountsRepository;
 import com.jkbank.accounts.repository.CustomerRepository;
 import com.jkbank.accounts.service.IAccountsService;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -22,8 +26,11 @@ import java.util.Random;
 @AllArgsConstructor
 public class AccountServiceImpl implements IAccountsService {
 
+    private static final Logger log = LoggerFactory.getLogger(AccountServiceImpl.class);
+
     private AccountsRepository accountsRepository; // autowired automatically by Spring-@AllArgsConstructor since we have a need for single constructor only
     private CustomerRepository customerRepository;
+    private final StreamBridge streamBridge; // autowired - to publish events to Kafka topics
     /**
      * Create a new account for the given customer.
      * @param customerDto - the customer data transfer object containing customer details
@@ -36,7 +43,17 @@ public class AccountServiceImpl implements IAccountsService {
             throw new CustomerAlreadyExistsException("Customer already exists with given mobile number: " + customerDto.getMobileNumber());
         }
         Customer savedCustomer = customerRepository.save(customer);
-        accountsRepository.save(createNewAccount(savedCustomer));
+        Accounts savedAccount = accountsRepository.save(createNewAccount(savedCustomer));
+        // Trigger communication event after successful account creation
+        sendCommunication(savedAccount, savedCustomer);
+    }
+
+    private void sendCommunication(Accounts account, Customer customer) {
+        var accountsMsgDto = new AccountsMsgDto(account.getAccountNumber(), customer.getName(),
+                customer.getEmail(), customer.getMobileNumber()); // var -> reduce boilerplate when the type is obvious from the right-hand side
+        log.info("Sending Communication request for the details: {}", accountsMsgDto);
+        var result = streamBridge.send("sendCommunication-out-0", accountsMsgDto);
+        log.info("Is the Communication request successfully triggered ? : {}", result);
     }
 
     /**

@@ -33,6 +33,11 @@ spring:
     port: 5672
     username: "guest"
     password: "guest"
+    connection-timeout: 10s
+  stream:
+    bindings:
+      sendCommunication-out-0: # output binding for sending messages to the queue/topic
+        destination: send-communication # queue/topic name to send messages to
 
 management:
   endpoints:
