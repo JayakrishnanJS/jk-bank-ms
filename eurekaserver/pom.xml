@@ -85,7 +85,7 @@
 				<version>3.5.1</version>
 				<configuration>
 					<to>
-						<image>jkdev1998/${project.artifactId}:tag7</image>
+						<image>jkdev1998/${project.artifactId}:tag8</image>
 					</to>
 				</configuration>
 			</plugin>
