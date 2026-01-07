@@ -17,5 +17,5 @@ public interface ICustomerService {
      * @param mobileNumber
      * @return CustomerAccountDto containing customer and account details
      */
-    CustomerAccountDto fetchCustomerAccountDetails(String mobileNumber);
+    CustomerAccountDto fetchCustomerAccountDetails(String mobileNumber, String correlationId);
 }

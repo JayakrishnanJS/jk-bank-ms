@@ -94,7 +94,7 @@ public class CustomerController {
                                                                    @Pattern(regexp = "([0-9]{10})", message = "Mobile number must be 10 digits")
                                                                    String mobileNumber) {
         logger.debug("fetchCustomerAccountDetails method execution started for mobile number: {} ", mobileNumber);
-        CustomerAccountDto customerAccountDto = iCustomerService.fetchCustomerAccountDetails(mobileNumber);
+        CustomerAccountDto customerAccountDto = iCustomerService.fetchCustomerAccountDetails(mobileNumber, correlationId);
         // logging mobile numeber is not secure in production, done here just for demo purpose
         logger.debug("fetchCustomerAccountDetails method execution completed for mobile number: {} ", mobileNumber);
         return ResponseEntity

@@ -61,7 +61,7 @@ public class CustomerServiceImpl implements ICustomerService {
      * @return CustomerAccountDto containing customer and account details
      */
     @Override
-    public CustomerAccountDto fetchCustomerAccountDetails(String mobileNumber) {
+    public CustomerAccountDto fetchCustomerAccountDetails(String mobileNumber, String correlationId) {
         Customer customer = customerRepository.findByMobileNumber(mobileNumber).orElseThrow(
                 () -> new ResourceNotFoundException("Customer", "mobileNumber", mobileNumber)
         );
