@@ -5,6 +5,7 @@ import com.jkbank.accounts.entity.Accounts;
 import com.jkbank.accounts.entity.Customer;
 import com.jkbank.accounts.exception.ResourceNotFoundException;
 import com.jkbank.accounts.mapper.AccountsMapper;
+import com.jkbank.accounts.mapper.CustomerAccountDtoAssembler;
 import com.jkbank.accounts.mapper.CustomerMapper;
 import com.jkbank.accounts.repository.AccountsRepository;
 import com.jkbank.accounts.repository.CustomerRepository;
@@ -52,5 +53,24 @@ public class CustomerServiceImpl implements ICustomerService {
             customerDetailsDto.setCardsDto(cardsDtoResponseEntity.getBody()); // getBody() returns the LoansDto object
         }
         return customerDetailsDto;
+    }
+
+    /**
+     * Fetch Customer Account Details by Mobile Number
+     * @param mobileNumber
+     * @return CustomerAccountDto containing customer and account details
+     */
+    @Override
+    public CustomerAccountDto fetchCustomerAccountDetails(String mobileNumber) {
+        Customer customer = customerRepository.findByMobileNumber(mobileNumber).orElseThrow(
+                () -> new ResourceNotFoundException("Customer", "mobileNumber", mobileNumber)
+        );
+        Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId()).orElseThrow(
+                () -> new ResourceNotFoundException("Account", "customerId", customer.getCustomerId().toString())
+        );
+
+        // Use assembler to create CustomerAccountDto
+        CustomerAccountDto customerAccountDto = CustomerAccountDtoAssembler.assemble(customer, accounts);
+        return customerAccountDto;
     }
 }

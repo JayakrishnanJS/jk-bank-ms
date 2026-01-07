@@ -1,5 +1,6 @@
 package com.jkbank.accounts.controller;
 
+import com.jkbank.accounts.dto.CustomerAccountDto;
 import com.jkbank.accounts.dto.CustomerDetailsDto;
 import com.jkbank.accounts.dto.ErrorResponseDto;
 import com.jkbank.accounts.service.ICustomerService;
@@ -34,8 +35,8 @@ public class CustomerController {
     private final ICustomerService iCustomerService; // dependency injection of service layer interface
 
     @Operation(
-            summary = "Fetch Customer Details REST API",
-            description = "Fetch customer details in JK Bank based on customer mobile number"
+            summary = "Fetch complete Customer Details REST API",
+            description = "Fetch complete customer details in JK Bank based on customer mobile number"
     )
     @ApiResponses(
             {
@@ -65,5 +66,39 @@ public class CustomerController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(customerDetailsDto);
+    }
+
+    @Operation(
+            summary = "Fetch Customer Account Details REST API",
+            description = "Fetch customer account details in JK Bank based on customer mobile number"
+    )
+    @ApiResponses(
+            {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "HTTP Status OK"
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "HTTP Status INTERNAL SERVER ERROR",
+                            content = @Content(
+                                    schema = @Schema(implementation = ErrorResponseDto.class)
+                            )
+                    )
+            }
+    )
+    @GetMapping("/fetchCustomerAccountDetails")
+    public ResponseEntity<CustomerAccountDto> fetchCustomerAccountDetails(@RequestHeader("jkbank-correlation-id")
+                                                                   String correlationId,
+                                                                   @RequestParam
+                                                                   @Pattern(regexp = "([0-9]{10})", message = "Mobile number must be 10 digits")
+                                                                   String mobileNumber) {
+        logger.debug("fetchCustomerAccountDetails method execution started for mobile number: {} ", mobileNumber);
+        CustomerAccountDto customerAccountDto = iCustomerService.fetchCustomerAccountDetails(mobileNumber);
+        // logging mobile numeber is not secure in production, done here just for demo purpose
+        logger.debug("fetchCustomerAccountDetails method execution completed for mobile number: {} ", mobileNumber);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(customerAccountDto);
     }
 }
