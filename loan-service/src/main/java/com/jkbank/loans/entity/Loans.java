@@ -22,5 +22,7 @@ public class Loans extends BaseEntity {
 	private int amountPaid;
 
 	private int outstandingAmount;
-	
+
+	@Column(name="communication_switch")
+	private Boolean communicationSwitch;
 }

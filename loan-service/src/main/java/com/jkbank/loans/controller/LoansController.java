@@ -65,10 +65,12 @@ public class LoansController {
     }
     )
     @PostMapping("/create")
-    public ResponseEntity<ResponseDto> createLoan(@RequestParam
+    public ResponseEntity<ResponseDto> createLoan(@RequestHeader("jkbank-correlation-id")
+                                                      String correlationId,
+                                                  @RequestParam
                                                       @Pattern(regexp="(^[0-9]{10})",message = "Mobile number must be 10 digits")
                                                       String mobileNumber) {
-        iLoansService.createLoan(mobileNumber);
+        iLoansService.createLoan(mobileNumber, correlationId);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new ResponseDto(LoansConstants.STATUS_201, LoansConstants.MESSAGE_201));

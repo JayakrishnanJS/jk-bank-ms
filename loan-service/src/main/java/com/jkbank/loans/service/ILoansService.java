@@ -8,7 +8,7 @@ public interface ILoansService {
      *
      * @param mobileNumber - Mobile Number of the Customer
      */
-    void createLoan(String mobileNumber);
+    void createLoan(String mobileNumber, String correlationId);
 
     /**
      *
@@ -31,4 +31,11 @@ public interface ILoansService {
      */
     boolean deleteLoan(String mobileNumber);
 
+    /**
+     * Update communication status for the given account number.
+     *
+     * @param loanNumber the account number of the customer
+     * @return true if the update was successful, false otherwise
+     */
+    boolean updateCommunicationStatus(Long loanNumber);
 }
