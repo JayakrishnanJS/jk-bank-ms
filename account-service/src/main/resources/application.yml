@@ -33,10 +33,17 @@ spring:
     stream:
       bindings:
         updateCommunication-in-0: # input binding for receiving messages from the queue/topic
-          destination: communication-sent # queue/topic name to listen to for incoming messages
+          destination: feedback-account-communication-sent # queue/topic name to listen to for incoming messages
           group: ${spring.application.name} # consumer group name, typically set to the application name. It helps manage message consumption in a distributed system.
         sendCommunication-out-0: # output binding for sending messages to the queue/topic
-          destination: send-communication # queue/topic name to send messages to
+          destination: send-account-communication # queue/topic name to send messages to
+        #      default-binder: rabbit
+        # commented above line and added below 5 lines to use Kafka as the default binder instead of RabbitMQ
+      default-binder: kafka
+      kafka:
+        binder:
+          brokers:
+            - localhost:9092
   rabbitmq:
     host: "localhost"
     port: 5672

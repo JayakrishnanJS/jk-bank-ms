@@ -5,7 +5,7 @@ spring:
     name: "message"
   cloud:
     function:
-      definition: email|sms
+      definition: emailAccountDetails|smsAccountDetails;emailLoanDetails|smsLoanDetails
       #  The spring.cloud.function.definition property specifies which functions are active in your application. The pipe (|) operator chains functions together, where the output of the first function becomes the input of the second.
       #In our case:
       #email function executes first
@@ -13,14 +13,27 @@ spring:
       #The final result comes from the sms function
     stream:
       bindings:
-        emailsms-in-0: # input binding for the combined function email|sms
-          destination: send-communication # queue/topic name to listen to for incoming messages
+        emailAccountDetailssmsAccountDetails-in-0: # input binding for the combined function emailAccountDetails|smsAccountDetails
+          destination: send-account-communication # queue/topic name to listen to for incoming messages
           group: ${spring.application.name} # consumer group name, typically set to the application name. It helps manage message consumption in a distributed system.
-        emailsms-out-0: # output binding for the combined function email|sms
-          destination: communication-sent # queue/topic name to send messages to
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-    connection-timeout: 10s
+        emailAccountDetailssmsAccountDetails-out-0: # output binding for the combined function emailAccountDetails|smsAccountDetails
+          destination: feedback-account-communication-sent # queue/topic name to send messages to
+#      default-binder: rabbit
+      # commented above line and added below 5(29 to 33)lines to use Kafka as the default binder instead of RabbitMQ
+        # --- Loans chain ---
+        emailLoanDetailssmsLoanDetails-in-0:
+          destination: send-loan-communication
+          group: ${spring.application.name}
+        emailLoanDetailssmsLoanDetails-out-0:
+          destination: feedback-loan-communication-sent
+      default-binder: kafka
+      kafka:
+        binder:
+          brokers:
+            - localhost:9092
+#  rabbitmq:
+#    host: localhost
+#    port: 5672
+#    username: guest
+#    password: guest
+#    connection-timeout: 10s
