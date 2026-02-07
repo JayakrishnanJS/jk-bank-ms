@@ -3,6 +3,8 @@ server:
 spring:
   application:
     name: "message"
+#  config:
+#    import: "optional:configserver:http://localhost:8071" # Using Config Server to fetch configurations not required here as we have complete local config, but this is required in microservices.yaml of K8S to avoid kafka/rabbit host missing issue
   cloud:
     function:
       definition: emailAccountDetails|smsAccountDetails;emailLoanDetails|smsLoanDetails
