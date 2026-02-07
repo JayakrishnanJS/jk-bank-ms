@@ -59,10 +59,10 @@ spec:
 
             # --- THE FORCE FIX: Hardcoded Destinations ---
             # This overrides everything. It forces the output to the correct topic.
-            - name: SPRING_CLOUD_STREAM_BINDINGS_SENDCOMMUNICATION_OUT_0_DESTINATION
-              value: "send-account-communication"
-            - name: SPRING_CLOUD_STREAM_BINDINGS_SENDCOMMUNICATION_OUT_0_BINDER
-              value: "kafka"
+#            - name: SPRING_CLOUD_STREAM_BINDINGS_SENDCOMMUNICATION_OUT_0_DESTINATION
+#              value: "send-account-communication"
+#            - name: SPRING_CLOUD_STREAM_BINDINGS_SENDCOMMUNICATION_OUT_0_BINDER
+#              value: "kafka"
             - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS
               value: "kafka:9092"
 
@@ -123,15 +123,8 @@ spec:
                   key: MYSQL_ROOT_PASSWORD
             - name: SPRING_RABBITMQ_HOST
               value: "rabbit"
-#            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS
-#              value: "kafka:9092"
             - name: OTEL_SERVICE_NAME
               value: "loans"
-            # --- THE FORCE FIX: Hardcoded Destinations ---
-            - name: SPRING_CLOUD_STREAM_BINDINGS_SENDCOMMUNICATION_OUT_0_DESTINATION
-              value: "send-loan-communication"
-            - name: SPRING_CLOUD_STREAM_BINDINGS_SENDCOMMUNICATION_OUT_0_BINDER
-              value: "kafka"
             - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS
               value: "kafka:9092"
 
@@ -234,15 +227,6 @@ spec:
             - configMapRef:
                 name: jkbank-configmap
           env:
-            # 1. FORCE TRUST ALL PACKAGES (The Security Fix)
-            # This allows com.jkbank.message... to read com.jkbank.accounts...
-#            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SPRING_JSON_TRUSTED_PACKAGES
-#              value: "*"
-
-            # 2. DISABLE HEADER CHECK (The "Safety Net")
-            # If package names differ, this forces Spring to ignore the class name and just read the JSON.
-#            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SPRING_JSON_USE_TYPE_HEADERS
-#              value: "false"
             - name: SPRING_APPLICATION_NAME
               value: "message"
             - name: SPRING_CONFIG_IMPORT
@@ -251,19 +235,5 @@ spec:
               value: ""
             - name: SPRING_RABBITMQ_HOST
               value: "rabbit"
-#            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS
-#              value: "kafka:9092"
-            # --- THE FORCE FIX: Hardcoded Destinations ---
-            # Accounts Input
-            - name: SPRING_CLOUD_STREAM_BINDINGS_EMAILACCOUNTDETAILSSMSACCOUNTDETAILS_IN_0_DESTINATION
-              value: "send-account-communication"
-
-            # Loans Input
-            - name: SPRING_CLOUD_STREAM_BINDINGS_EMAILLOANDETAILSSMSLOANDETAILS_IN_0_DESTINATION
-              value: "send-loan-communication"
-
-            # Broker & Safety
             - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS
               value: "kafka:9092"
-            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SPRING_JSON_TRUSTED_PACKAGES
-              value: "*"
