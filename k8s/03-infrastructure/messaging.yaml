@@ -25,6 +25,11 @@ spec:
           image: apache/kafka:4.1.1
           ports: [{ containerPort: 9092 }, { containerPort: 29092 }, { containerPort: 29093 }]
           env:
+            # --- BUG FIX START: FORCE SINGLE NODE MODE --- By default, Kafka 4.x requires at least 3 nodes for a KRaft cluster. These settings force it to run in single-node mode, which is suitable for development and testing but not recommended for production.
+            - { name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR, value: "1" }
+            - { name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR, value: "1" }
+            - { name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR, value: "1" }
+            # --- CRITICAL FIX END ---
             - { name: KAFKA_NODE_ID, value: "1" }
             - { name: KAFKA_PROCESS_ROLES, value: "broker,controller" }
             - { name: KAFKA_CONTROLLER_QUORUM_VOTERS, value: "1@kafka-0.kafka:29093" }
