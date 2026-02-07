@@ -1,0 +1,53 @@
+# ConfigServer
+apiVersion: v1
+kind: Service
+metadata: { name: configserver }
+spec: { selector: { app: configserver }, type: ClusterIP, ports: [{ port: 8071 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: configserver }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: configserver } }
+  template:
+    metadata: { labels: { app: configserver } }
+    spec:
+      containers:
+        - name: configserver
+          image: jkdev1998/configserver:tag10
+          ports: [{ containerPort: 8071 }]
+          resources: { requests: { memory: "300Mi", cpu: "200m" }, limits: { memory: "700Mi", cpu: "1000m" } }
+          envFrom: [{ configMapRef: { name: jkbank-configmap } }]
+          env:
+            # Override global config import to prevent self-reference loop
+            - name: SPRING_CONFIG_IMPORT
+              value: "optional:classpath:/application.yml" # or simply "" to unset it
+            # --- FIX ENDS HERE ---
+            - name: SPRING_RABBITMQ_HOST
+              value: "rabbit"
+            - name: OTEL_SERVICE_NAME
+              value: "configserver"
+---
+# EurekaServer
+apiVersion: v1
+kind: Service
+metadata: { name: eurekaserver }
+spec: { selector: { app: eurekaserver }, type: ClusterIP, ports: [{ port: 8070 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: eurekaserver }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: eurekaserver } }
+  template:
+    metadata: { labels: { app: eurekaserver } }
+    spec:
+      containers:
+        - name: eurekaserver
+          image: jkdev1998/eurekaserver:tag10
+          ports: [{ containerPort: 8070 }]
+          resources: { requests: { memory: "300Mi", cpu: "200m" }, limits: { memory: "700Mi", cpu: "1000m" } }
+          envFrom: [{ configMapRef: { name: jkbank-configmap } }]
+          env: [{ name: SPRING_APPLICATION_NAME, value: "eurekaserver" }, { name: SPRING_RABBITMQ_HOST, value: "rabbit" }, { name: OTEL_SERVICE_NAME, value: "eurekaserver" }]

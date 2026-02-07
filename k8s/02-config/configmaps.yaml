@@ -1,0 +1,366 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jkbank-configmap
+data:
+  # ==========================================
+  # GLOBAL ENVIRONMENT VARIABLES
+  # ==========================================
+  SPRING_PROFILES_ACTIVE: "prod"
+  SPRING_CONFIG_IMPORT: "configserver:http://configserver:8071/"
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eurekaserver:8070/eureka/"
+  GLOBAL_RABBITMQ_HOST: "rabbit"
+  GLOBAL_KAFKA_BROKERS: "kafka:9092"
+  # Updated to port 7080 to match Keycloak K8s Service
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "http://keycloak:7080/realms/master/protocol/openid-connect/certs"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://tempo:4318"
+  OTEL_METRICS_EXPORTER: "none"
+  OTEL_LOGS_EXPORTER: "none"
+  JAVA_TOOL_OPTIONS: "-javaagent:/app/libs/opentelemetry-javaagent-2.22.0.jar"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config-files
+data:
+  # ==========================================
+  # 1. NGINX GATEWAY CONFIG (Loki Router)
+  # ==========================================
+  nginx.conf: |
+    user  nginx;
+    worker_processes  5;
+    events {
+      worker_connections   1000;
+    }
+    http {
+      resolver kube-dns.kube-system.svc.cluster.local;
+      server {
+        listen             3100;
+        location = / {
+          return 200 'OK';
+          auth_basic off;
+        }
+        # Route Write traffic to loki-write service
+        location = /api/prom/push {
+          proxy_pass       http://loki-write:3100$request_uri;
+        }
+        location = /loki/api/v1/push {
+          proxy_pass       http://loki-write:3100$request_uri;
+        }
+        # Route Read/Tail traffic to loki-read service
+        location = /api/prom/tail {
+          proxy_pass       http://loki-read:3100$request_uri;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+        }
+        location ~ /api/prom/.* {
+          proxy_pass       http://loki-read:3100$request_uri;
+        }
+        location = /loki/api/v1/tail {
+          proxy_pass       http://loki-read:3100$request_uri;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+        }
+        location ~ /loki/api/.* {
+          proxy_pass       http://loki-read:3100$request_uri;
+        }
+      }
+    }
+
+  # ==========================================
+  # 2. PROMETHEUS CONFIG
+  # ==========================================
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+    scrape_configs:
+      - job_name: 'services'
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets:
+              - 'accounts:8080'
+              - 'loans:8090'
+              - 'cards:9000'
+              - 'gatewayserver:8072'
+              - 'eurekaserver:8070'
+              - 'configserver:8071'
+
+  # ==========================================
+  # 3. LOKI CONFIG
+  # ==========================================
+  loki-config.yml: |
+    server:
+      http_listen_address: 0.0.0.0
+      http_listen_port: 3100
+    memberlist:
+      join_members: ["loki-read", "loki-write", "loki-backend"]
+      dead_node_reclaim_time: 30s
+      gossip_to_dead_nodes_time: 15s
+      left_ingesters_timeout: 30s
+      bind_addr: ['0.0.0.0']
+      bind_port: 7946
+      gossip_interval: 2s
+    schema_config:
+      configs:
+        - from: 2023-01-01
+          store: tsdb
+          object_store: s3
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+    common:
+      path_prefix: /loki
+      replication_factor: 1
+      compactor_address: http://loki-backend:3100
+      storage:
+        s3:
+          endpoint: minio:9000
+          insecure: true
+          bucketnames: loki-data
+          access_key_id: loki
+          secret_access_key: supersecret
+          s3forcepathstyle: true
+      ring:
+        kvstore:
+          store: memberlist
+    ruler:
+      storage:
+        s3:
+          bucketnames: loki-ruler
+    compactor:
+      working_directory: /tmp/compactor
+
+  # ==========================================
+  # 4. TEMPO CONFIG
+  # ==========================================
+  tempo.yml: |
+    server:
+      http_listen_port: 3100
+      http_listen_address: 0.0.0.0
+    distributor:
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:4317
+            http:
+              endpoint: 0.0.0.0:4318
+    ingester:
+      trace_idle_period: 10s
+      max_block_bytes: 1_000_000
+      max_block_duration: 5m
+    compactor:
+      compaction:
+        compaction_window: 1h
+        max_compaction_objects: 1000000
+        block_retention: 1h
+        compacted_block_retention: 10m
+    storage:
+      trace:
+        backend: local
+        local:
+          path: /tmp/tempo/blocks
+        pool:
+          max_workers: 100
+          queue_depth: 10000
+
+  # ==========================================
+  # 5. ALLOY (Collector) CONFIG
+  # ==========================================
+  config.alloy: |
+    discovery.docker "flog_scrape" {
+      host             = "unix:///var/run/docker.sock"
+      refresh_interval = "5s"
+    }
+    discovery.relabel "flog_scrape" {
+      targets = []
+      rule {
+        source_labels = ["__meta_docker_container_name"]
+        regex         = "/(.*)"
+        target_label  = "container"
+      }
+    }
+    loki.source.docker "flog_scrape" {
+      host             = "unix:///var/run/docker.sock"
+      targets          = discovery.docker.flog_scrape.targets
+      forward_to       = [loki.write.default.receiver]
+      relabel_rules    = discovery.relabel.flog_scrape.rules
+      refresh_interval = "5s"
+    }
+    loki.write "default" {
+      endpoint {
+        url       = "http://loki-gateway:3100/loki/api/v1/push"
+        tenant_id = "tenant1"
+      }
+      external_labels = {}
+    }
+
+  # ==========================================
+  # 6. GRAFANA DATASOURCE
+  # ==========================================
+  datasource.yml: |
+    apiVersion: 1
+    deleteDatasources:
+      - name: Prometheus
+      - name: Loki
+      - name: Tempo
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        uid: prometheus
+        url: http://prometheus:9090
+        access: proxy
+        orgId: 1
+        basicAuth: false
+        isDefault: false
+        version: 1
+        editable: true
+        jsonData:
+          httpMethod: GET
+      - name: Tempo
+        type: tempo
+        uid: tempo
+        url: http://tempo:3100
+        access: proxy
+        orgId: 1
+        basicAuth: false
+        isDefault: false
+        version: 1
+        editable: true
+        jsonData:
+          httpMethod: GET
+          serviceMap:
+            datasourceUid: 'prometheus'
+      - name: Loki
+        type: loki
+        uid: loki
+        access: proxy
+        orgId: 1
+        editable: true
+        url: http://loki-gateway:3100
+        jsonData:
+          httpHeaderName1: "X-Scope-OrgID"
+          derivedFields:
+            - datasourceUid: tempo
+              matcherRegex: "\\[.+,(.+),.+\\]"
+              name: TraceID
+              url: '$${__value.raw}'
+        secureJsonData:
+          httpHeaderValue1: "tenant1"
+
+  # ==========================================
+  # 7. KEYCLOAK REALM IMPORT (FULL)
+  # ==========================================
+  master-realm.json: |
+    {
+      "realm": "master",
+      "enabled": true,
+      "clients": [
+        {
+          "clientId": "jkbank-callcenter-clientcredentialtype",
+          "name": "JK Bank Call Center Service",
+          "description": "Service account client for call center backend services",
+          "enabled": true,
+          "clientAuthenticatorType": "client-secret",
+          "secret": "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
+          "publicClient": false,
+          "serviceAccountsEnabled": true,
+          "standardFlowEnabled": false,
+          "implicitFlowEnabled": false,
+          "directAccessGrantsEnabled": false,
+          "authorizationServicesEnabled": false,
+          "redirectUris": [
+            "*"
+          ],
+          "webOrigins": [
+            "*"
+          ],
+          "protocol": "openid-connect",
+          "attributes": {
+            "access.token.lifespan": "3600"
+          }
+        },
+        {
+          "clientId": "jkbank-callcenter-authcodetype",
+          "name": "JK Bank Call Center Web",
+          "description": "Authorization code client for call center web application",
+          "enabled": true,
+          "clientAuthenticatorType": "client-secret",
+          "secret": "b2c3d4e5-f6a7-5b6c-9d0e-1f2a3b4c5d6e",
+          "publicClient": false,
+          "serviceAccountsEnabled": false,
+          "standardFlowEnabled": true,
+          "implicitFlowEnabled": false,
+          "directAccessGrantsEnabled": false,
+          "authorizationServicesEnabled": false,
+          "redirectUris": [
+            "*"
+          ],
+          "webOrigins": [
+            "*"
+          ],
+          "protocol": "openid-connect",
+          "attributes": {
+            "access.token.lifespan": "3600"
+          }
+        }
+      ],
+      "roles": {
+        "realm": [
+          {
+            "name": "ACCOUNTS",
+            "description": "Role for accessing accounts microservice operations"
+          },
+          {
+            "name": "CARDS",
+            "description": "Role for accessing cards microservice operations"
+          },
+          {
+            "name": "LOANS",
+            "description": "Role for accessing loans microservice operations"
+          }
+        ]
+      },
+      "users": [
+        {
+          "username": "admin",
+          "email": "admin@jkbank.com",
+          "firstName": "Admin",
+          "lastName": "User",
+          "enabled": true,
+          "emailVerified": true,
+          "credentials": [
+            {
+              "type": "password",
+              "value": "admin",
+              "temporary": false
+            }
+          ],
+          "realmRoles": ["admin"]
+        },
+        {
+          "username": "service-account-jkbank-callcenter-clientcredentialtype",
+          "enabled": true,
+          "serviceAccountClientId": "jkbank-callcenter-clientcredentialtype",
+          "realmRoles": ["ACCOUNTS", "CARDS", "LOANS"]
+        },
+        {
+          "username": "jayakrishnan",
+          "email": "jayakrishnan@jkbank.com",
+          "firstName": "Jayakrishnan",
+          "lastName": "J S",
+          "enabled": true,
+          "emailVerified": true,
+          "credentials": [
+            {
+              "type": "password",
+              "value": "12345",
+              "temporary": false
+            }
+          ],
+          "realmRoles": ["ACCOUNTS", "CARDS", "LOANS"]
+        }
+      ]
+    }

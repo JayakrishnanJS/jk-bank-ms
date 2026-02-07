@@ -1,0 +1,269 @@
+# --- Accounts ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: accounts
+spec:
+  selector:
+    app: accounts
+  type: ClusterIP
+  ports:
+    - port: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: accounts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: accounts
+  template:
+    metadata:
+      labels:
+        app: accounts
+    spec:
+      containers:
+        - name: accounts
+          image: jkdev1998/accounts:tag10
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "300Mi"
+              cpu: "200m"
+            limits:
+              memory: "700Mi"
+              cpu: "1000m"
+          envFrom:
+            - configMapRef:
+                name: jkbank-configmap
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: "accounts"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://accountsdb:3306/accountsdb"
+            # ADDED DB CREDENTIALS
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "root"
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: jkbank-secrets
+                  key: MYSQL_ROOT_PASSWORD
+            - name: SPRING_RABBITMQ_HOST
+              value: "rabbit"
+            - name: OTEL_SERVICE_NAME
+              value: "accounts"
+
+            # --- THE FORCE FIX: Hardcoded Destinations ---
+            # This overrides everything. It forces the output to the correct topic.
+            - name: SPRING_CLOUD_STREAM_BINDINGS_SENDCOMMUNICATION_OUT_0_DESTINATION
+              value: "send-account-communication"
+            - name: SPRING_CLOUD_STREAM_BINDINGS_SENDCOMMUNICATION_OUT_0_BINDER
+              value: "kafka"
+            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS
+              value: "kafka:9092"
+
+---
+# --- Loans (2 Replicas) ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loans
+spec:
+  selector:
+    app: loans
+  type: ClusterIP
+  ports:
+    - port: 8090
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loans
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: loans
+  template:
+    metadata:
+      labels:
+        app: loans
+    spec:
+      containers:
+        - name: loans
+          image: jkdev1998/loans:tag10
+          ports:
+            - containerPort: 8090
+          resources:
+            requests:
+              memory: "300Mi"
+              cpu: "200m"
+            limits:
+              memory: "700Mi"
+              cpu: "1000m"
+          envFrom:
+            - configMapRef:
+                name: jkbank-configmap
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: "loans"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://loansdb:3306/loansdb"
+            # ADDED DB CREDENTIALS
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "root"
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: jkbank-secrets
+                  key: MYSQL_ROOT_PASSWORD
+            - name: SPRING_RABBITMQ_HOST
+              value: "rabbit"
+#            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS
+#              value: "kafka:9092"
+            - name: OTEL_SERVICE_NAME
+              value: "loans"
+            # --- THE FORCE FIX: Hardcoded Destinations ---
+            - name: SPRING_CLOUD_STREAM_BINDINGS_SENDCOMMUNICATION_OUT_0_DESTINATION
+              value: "send-loan-communication"
+            - name: SPRING_CLOUD_STREAM_BINDINGS_SENDCOMMUNICATION_OUT_0_BINDER
+              value: "kafka"
+            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS
+              value: "kafka:9092"
+
+---
+# --- Cards ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cards
+spec:
+  selector:
+    app: cards
+  type: ClusterIP
+  ports:
+    - port: 9000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cards
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cards
+  template:
+    metadata:
+      labels:
+        app: cards
+    spec:
+      containers:
+        - name: cards
+          image: jkdev1998/cards:tag10
+          ports:
+            - containerPort: 9000
+          resources:
+            requests:
+              memory: "300Mi"
+              cpu: "200m"
+            limits:
+              memory: "700Mi"
+              cpu: "1000m"
+          envFrom:
+            - configMapRef:
+                name: jkbank-configmap
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: "cards"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://cardsdb:3306/cardsdb"
+            # ADDED DB CREDENTIALS
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "root"
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: jkbank-secrets
+                  key: MYSQL_ROOT_PASSWORD
+            - name: OTEL_SERVICE_NAME
+              value: "cards"
+
+---
+# --- Message Service ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: message
+spec:
+  selector:
+    app: message
+  type: ClusterIP
+  ports:
+    - port: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: message
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: message
+  template:
+    metadata:
+      labels:
+        app: message
+    spec:
+      containers:
+        - name: message
+          image: jkdev1998/message:tag10
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "100m"
+            limits:
+              memory: "500Mi"
+              cpu: "500m"
+          envFrom:
+            - configMapRef:
+                name: jkbank-configmap
+          env:
+            # 1. FORCE TRUST ALL PACKAGES (The Security Fix)
+            # This allows com.jkbank.message... to read com.jkbank.accounts...
+#            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SPRING_JSON_TRUSTED_PACKAGES
+#              value: "*"
+
+            # 2. DISABLE HEADER CHECK (The "Safety Net")
+            # If package names differ, this forces Spring to ignore the class name and just read the JSON.
+#            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SPRING_JSON_USE_TYPE_HEADERS
+#              value: "false"
+            - name: SPRING_APPLICATION_NAME
+              value: "message"
+            - name: SPRING_CONFIG_IMPORT
+              value: "optional:configserver:http://configserver:8071/"
+            - name: JAVA_TOOL_OPTIONS
+              value: ""
+            - name: SPRING_RABBITMQ_HOST
+              value: "rabbit"
+#            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS
+#              value: "kafka:9092"
+            # --- THE FORCE FIX: Hardcoded Destinations ---
+            # Accounts Input
+            - name: SPRING_CLOUD_STREAM_BINDINGS_EMAILACCOUNTDETAILSSMSACCOUNTDETAILS_IN_0_DESTINATION
+              value: "send-account-communication"
+
+            # Loans Input
+            - name: SPRING_CLOUD_STREAM_BINDINGS_EMAILLOANDETAILSSMSLOANDETAILS_IN_0_DESTINATION
+              value: "send-loan-communication"
+
+            # Broker & Safety
+            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS
+              value: "kafka:9092"
+            - name: SPRING_CLOUD_STREAM_KAFKA_BINDER_CONFIGURATION_SPRING_JSON_TRUSTED_PACKAGES
+              value: "*"

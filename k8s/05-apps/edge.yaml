@@ -1,0 +1,115 @@
+# --- Gateway Server (The Public Entry Point) ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gatewayserver
+spec:
+  selector:
+    app: gatewayserver
+  type: LoadBalancer # EXTERNAL IP
+  ports:
+    - port: 8072
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gatewayserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gatewayserver
+  template:
+    metadata:
+      labels:
+        app: gatewayserver
+    spec:
+      containers:
+      - name: gatewayserver
+        image: jkdev1998/gatewayserver:tag10
+        ports:
+        - containerPort: 8072
+        resources:
+          requests:
+            memory: "400Mi"
+            cpu: "300m"
+          limits:
+            memory: "800Mi"
+            cpu: "1000m"
+        envFrom:
+          - configMapRef:
+              name: jkbank-configmap
+        env:
+        - name: SPRING_APPLICATION_NAME
+          value: "gatewayserver"
+        - name: SPRING_DATA_REDIS_HOST
+          value: "redis"
+        - name: SPRING_DATA_REDIS_PORT
+          value: "6379"
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbit"
+        - name: OTEL_SERVICE_NAME
+          value: "gatewayserver"
+
+---
+# --- Keycloak (External Auth) ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+spec:
+  type: LoadBalancer # EXTERNAL IP
+  ports:
+    - name: http
+      port: 7080
+      targetPort: 8080
+  selector:
+    app: keycloak
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:26.4.7
+          args: ["start-dev", "--import-realm"]
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "512Mi"
+            limits:
+              memory: "1Gi"
+          env:
+            - name: KC_BOOTSTRAP_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: jkbank-secrets
+                  key: KEYCLOAK_ADMIN
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: jkbank-secrets
+                  key: KEYCLOAK_ADMIN_PASSWORD
+          volumeMounts:
+            - name: keycloak-import
+              mountPath: /opt/keycloak/data/import/master-realm.json
+              subPath: master-realm.json
+              readOnly: true
+      volumes:
+        - name: keycloak-import
+          configMap:
+            name: app-config-files
+
+---

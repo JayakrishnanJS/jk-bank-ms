@@ -1,0 +1,217 @@
+# --- Loki Stack ---
+# (Using Deployments with EmptyDir for simplicity in this specific "Production" pass 
+# unless you have S3 buckets ready. If you have real S3, these are fine as Deployments 
+# because state is offloaded. If not, these technically need PVCs too, but staying 
+# consistent with your config using Minio as the S3 target.)
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-gateway
+spec:
+  ports:
+    - port: 3100
+  selector:
+    app: loki-gateway
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki-gateway
+  template:
+    metadata:
+      labels:
+        app: loki-gateway
+    spec:
+      containers:
+        - name: loki-gateway
+          image: nginx:1.29.3
+          ports:
+            - containerPort: 3100
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+      volumes:
+        - name: config
+          configMap:
+            name: app-config-files
+
+---
+# Loki Components (Read/Write/Backend) - Simplified as deployments 
+# pointing to Minio (Stateful) for storage.
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-read
+spec:
+  ports:
+    - port: 3100
+  selector:
+    app: loki-read
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki-read
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki-read
+  template:
+    metadata:
+      labels:
+        app: loki-read
+    spec:
+      containers:
+        - name: loki-read
+          image: grafana/loki:3.6.2
+          args: ["-config.file=/etc/loki/config.yml", "-target=read"]
+          ports:
+            - containerPort: 3100
+          volumeMounts:
+            - name: config
+              mountPath: /etc/loki/config.yml
+              subPath: loki-config.yml
+      volumes:
+        - name: config
+          configMap:
+            name: app-config-files
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-write
+spec:
+  ports:
+    - port: 3100
+  selector:
+    app: loki-write
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki-write
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki-write
+  template:
+    metadata:
+      labels:
+        app: loki-write
+    spec:
+      containers:
+        - name: loki-write
+          image: grafana/loki:3.6.2
+          args: ["-config.file=/etc/loki/config.yml", "-target=write"]
+          ports:
+            - containerPort: 3100
+          volumeMounts:
+            - name: config
+              mountPath: /etc/loki/config.yml
+              subPath: loki-config.yml
+      volumes:
+        - name: config
+          configMap:
+            name: app-config-files
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-backend
+spec:
+  ports:
+    - port: 3100
+  selector:
+    app: loki-backend
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki-backend
+  template:
+    metadata:
+      labels:
+        app: loki-backend
+    spec:
+      containers:
+        - name: loki-backend
+          image: grafana/loki:3.6.2
+          args: ["-config.file=/etc/loki/config.yml", "-target=backend", "-legacy-read-mode=false"]
+          ports:
+            - containerPort: 3100
+          volumeMounts:
+            - name: config
+              mountPath: /etc/loki/config.yml
+              subPath: loki-config.yml
+      volumes:
+        - name: config
+          configMap:
+            name: app-config-files
+
+---
+
+# --- Alloy ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alloy
+spec:
+  ports:
+    - port: 12345
+  selector:
+    app: alloy
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alloy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alloy
+  template:
+    metadata:
+      labels:
+        app: alloy
+    spec:
+      containers:
+        - name: alloy
+          image: grafana/alloy:v1.12.0
+          args: ["run", "--server.http.listen-addr=0.0.0.0:12345", "--storage.path=/var/lib/alloy/data", "/etc/alloy/config.alloy"]
+          ports:
+            - containerPort: 12345
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy/config.alloy
+              subPath: config.alloy
+            - name: dockersock
+              mountPath: /var/run/docker.sock
+      volumes:
+        - name: config
+          configMap:
+            name: app-config-files
+        - name: dockersock
+          hostPath:
+            path: /var/run/docker.sock

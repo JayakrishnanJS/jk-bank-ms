@@ -1,0 +1,69 @@
+# Kafka Service & StatefulSet
+apiVersion: v1
+kind: Service
+metadata: { name: kafka }
+spec:
+  ports:
+    - { port: 9092, name: plaintext-host }
+    - { port: 29092, name: internal }
+    - { port: 29093, name: controller }
+  clusterIP: None
+  selector: { app: kafka }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: kafka }
+spec:
+  serviceName: "kafka"
+  replicas: 1
+  selector: { matchLabels: { app: kafka } }
+  template:
+    metadata: { labels: { app: kafka } }
+    spec:
+      containers:
+        - name: kafka
+          image: apache/kafka:4.1.1
+          ports: [{ containerPort: 9092 }, { containerPort: 29092 }, { containerPort: 29093 }]
+          env:
+            - { name: KAFKA_NODE_ID, value: "1" }
+            - { name: KAFKA_PROCESS_ROLES, value: "broker,controller" }
+            - { name: KAFKA_CONTROLLER_QUORUM_VOTERS, value: "1@kafka-0.kafka:29093" }
+            - { name: KAFKA_LISTENERS, value: "PLAINTEXT://kafka-0.kafka:29092,CONTROLLER://kafka-0.kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092" }
+            - { name: KAFKA_ADVERTISED_LISTENERS, value: "PLAINTEXT://kafka-0.kafka:29092,PLAINTEXT_HOST://kafka:9092" }
+            - { name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP, value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT" }
+            - { name: KAFKA_CONTROLLER_LISTENER_NAMES, value: "CONTROLLER" }
+            - { name: KAFKA_INTER_BROKER_LISTENER_NAME, value: "PLAINTEXT" }
+            - { name: KAFKA_LOG_DIRS, value: "/tmp/kraft-combined-logs" }
+            - { name: CLUSTER_ID, value: "MkU3OEVBNTcwNTJENDM2Qk" }
+          volumeMounts: [{ name: kafka-data, mountPath: /tmp/kraft-combined-logs }]
+  volumeClaimTemplates:
+    - metadata: { name: kafka-data }
+      spec: { accessModes: ["ReadWriteOnce"], resources: { requests: { storage: 2Gi } } }
+---
+# RabbitMQ Service & StatefulSet
+apiVersion: v1
+kind: Service
+metadata: { name: rabbit }
+spec:
+  ports: [{ port: 5672, name: amqp }, { port: 15672, name: management }]
+  selector: { app: rabbit }
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: rabbit }
+spec:
+  serviceName: "rabbit"
+  replicas: 1
+  selector: { matchLabels: { app: rabbit } }
+  template:
+    metadata: { labels: { app: rabbit } }
+    spec:
+      containers:
+        - name: rabbit
+          image: rabbitmq:4-management
+          ports: [{ containerPort: 5672 }, { containerPort: 15672 }]
+          volumeMounts: [{ name: rabbit-data, mountPath: /var/lib/rabbitmq }]
+  volumeClaimTemplates:
+    - metadata: { name: rabbit-data }
+      spec: { accessModes: ["ReadWriteOnce"], resources: { requests: { storage: 1Gi } } }

@@ -1,0 +1,86 @@
+# Accounts DB
+apiVersion: v1
+kind: Service
+metadata: { name: accountsdb }
+spec: { ports: [{ port: 3306 }], selector: { app: accountsdb }, type: ClusterIP }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: accountsdb }
+spec:
+  serviceName: "accountsdb"
+  replicas: 1
+  selector: { matchLabels: { app: accountsdb } }
+  template:
+    metadata: { labels: { app: accountsdb } }
+    spec:
+      containers:
+        - name: accountsdb
+          image: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom: { secretKeyRef: { name: jkbank-secrets, key: MYSQL_ROOT_PASSWORD } }
+            - name: MYSQL_DATABASE
+              value: "accountsdb"
+          volumeMounts: [{ name: mysql-data, mountPath: /var/lib/mysql }]
+  volumeClaimTemplates:
+    - metadata: { name: mysql-data }
+      spec: { accessModes: ["ReadWriteOnce"], resources: { requests: { storage: 2Gi } } }
+---
+# Loans DB
+apiVersion: v1
+kind: Service
+metadata: { name: loansdb }
+spec: { ports: [{ port: 3306 }], selector: { app: loansdb }, type: ClusterIP }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: loansdb }
+spec:
+  serviceName: "loansdb"
+  replicas: 1
+  selector: { matchLabels: { app: loansdb } }
+  template:
+    metadata: { labels: { app: loansdb } }
+    spec:
+      containers:
+        - name: loansdb
+          image: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom: { secretKeyRef: { name: jkbank-secrets, key: MYSQL_ROOT_PASSWORD } }
+            - name: MYSQL_DATABASE
+              value: "loansdb"
+          volumeMounts: [{ name: mysql-data, mountPath: /var/lib/mysql }]
+  volumeClaimTemplates:
+    - metadata: { name: mysql-data }
+      spec: { accessModes: ["ReadWriteOnce"], resources: { requests: { storage: 2Gi } } }
+---
+# Cards DB
+apiVersion: v1
+kind: Service
+metadata: { name: cardsdb }
+spec: { ports: [{ port: 3306 }], selector: { app: cardsdb }, type: ClusterIP }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: cardsdb }
+spec:
+  serviceName: "cardsdb"
+  replicas: 1
+  selector: { matchLabels: { app: cardsdb } }
+  template:
+    metadata: { labels: { app: cardsdb } }
+    spec:
+      containers:
+        - name: cardsdb
+          image: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom: { secretKeyRef: { name: jkbank-secrets, key: MYSQL_ROOT_PASSWORD } }
+            - name: MYSQL_DATABASE
+              value: "cardsdb"
+          volumeMounts: [{ name: mysql-data, mountPath: /var/lib/mysql }]
+  volumeClaimTemplates:
+    - metadata: { name: mysql-data }
+      spec: { accessModes: ["ReadWriteOnce"], resources: { requests: { storage: 2Gi } } }
